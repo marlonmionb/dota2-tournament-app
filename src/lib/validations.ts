@@ -1,0 +1,38 @@
+import { z } from "zod";
+import { TournamentFormat } from "@prisma/client";
+
+export const createTournamentSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  description: z.string().optional(),
+  maxTeams: z
+    .number()
+    .int()
+    .min(2, "Must have at least 2 teams")
+    .refine((n) => (n & (n - 1)) === 0, {
+      message: "Max teams must be a power of 2 (e.g. 2, 4, 8, 16)",
+    }),
+  startDate: z.coerce.date(),
+  registrationDeadline: z.coerce.date(),
+  format: z.nativeEnum(TournamentFormat).default(TournamentFormat.SINGLE_ELIMINATION),
+});
+
+export const registerTeamSchema = z.object({
+  teamName: z.string().min(1, "Team name is required").max(100),
+  captainName: z.string().min(1, "Captain name is required").max(100),
+  players: z
+    .array(
+      z.object({
+        nickname: z.string().min(1, "Nickname is required"),
+        steamId: z.string().min(1, "Steam ID is required"),
+      })
+    )
+    .length(5, "A team must have exactly 5 players"),
+});
+
+export const matchResultSchema = z.object({
+  winnerId: z.string().uuid("Winner ID must be a valid UUID"),
+});
+
+export type CreateTournamentInput = z.infer<typeof createTournamentSchema>;
+export type RegisterTeamInput = z.infer<typeof registerTeamSchema>;
+export type MatchResultInput = z.infer<typeof matchResultSchema>;

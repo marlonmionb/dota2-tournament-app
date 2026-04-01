@@ -1,0 +1,166 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── NextAuth Models ──────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id            String       @id @default(cuid())
+  name          String?
+  email         String?      @unique
+  emailVerified DateTime?    @map("email_verified")
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  tournaments   Tournament[]
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─── Tournament Entities ──────────────────────────────────────────────────────
+
+model Tournament {
+  id                   String           @id @default(uuid())
+  name                 String
+  description          String?
+  maxTeams             Int              @map("max_teams")
+  startDate            DateTime         @map("start_date")
+  registrationDeadline DateTime         @map("registration_deadline")
+  format               TournamentFormat @default(SINGLE_ELIMINATION)
+  status               TournamentStatus @default(DRAFT)
+  organizerId          String           @map("organizer_id")
+  organizer            User             @relation(fields: [organizerId], references: [id])
+  teams                Team[]
+  matches              Match[]
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updated_at")
+
+  @@index([organizerId])
+  @@map("tournaments")
+}
+
+model Team {
+  id             String     @id @default(uuid())
+  teamName       String     @map("team_name")
+  captainName    String     @map("captain_name")
+  tournamentId   String     @map("tournament_id")
+  tournament     Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  players        Player[]
+  matchesAsTeamA Match[]    @relation("TeamAMatches")
+  matchesAsTeamB Match[]    @relation("TeamBMatches")
+  wonMatches     Match[]    @relation("WinnerMatches")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  @@unique([teamName, tournamentId])
+  @@index([tournamentId])
+  @@map("teams")
+}
+
+model Player {
+  id        String   @id @default(uuid())
+  nickname  String
+  steamId   String   @map("steam_id")
+  teamId    String   @map("team_id")
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([teamId])
+  @@index([steamId])
+  @@map("players")
+}
+
+model Match {
+  id           String      @id @default(uuid())
+  tournamentId String      @map("tournament_id")
+  tournament   Tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  teamAId      String?     @map("team_a_id")
+  teamA        Team?       @relation("TeamAMatches", fields: [teamAId], references: [id])
+  teamBId      String?     @map("team_b_id")
+  teamB        Team?       @relation("TeamBMatches", fields: [teamBId], references: [id])
+  round        Int
+  status       MatchStatus @default(SCHEDULED)
+  winnerId     String?     @map("winner_id")
+  winner       Team?       @relation("WinnerMatches", fields: [winnerId], references: [id])
+  nextMatchId  String?     @map("next_match_id")
+  nextMatchSlot MatchSlot? @map("next_match_slot")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  @@index([tournamentId])
+  @@index([teamAId])
+  @@index([teamBId])
+  @@map("matches")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum TournamentFormat {
+  SINGLE_ELIMINATION
+}
+
+enum TournamentStatus {
+  DRAFT
+  REGISTRATION_OPEN
+  REGISTRATION_CLOSED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum MatchStatus {
+  SCHEDULED
+  COMPLETED
+}
+
+enum MatchSlot {
+  TEAM_A
+  TEAM_B
+}
