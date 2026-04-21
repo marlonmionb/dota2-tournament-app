@@ -1,5 +1,10 @@
 import type { BracketRound, MatchWithTeams } from "@/types";
 
+// Must match Tailwind gap-8 (32px) used between columns
+const COL_GAP = 32;
+// Vertical space allocated per match in round 1; doubles each round for proper alignment
+const SLOT_BASE = 200;
+
 interface Props {
   rounds: BracketRound[];
   getRoundLabel: (round: number, totalRounds: number) => string;
@@ -7,41 +12,60 @@ interface Props {
 
 function TeamSlot({
   name,
+  logoUrl,
   isWinner,
 }: {
   name: string;
+  logoUrl?: string | null;
   isWinner: boolean;
 }) {
   return (
     <div
       className={
         isWinner
-          ? "rounded-xl bg-red-950/50 px-4 py-3 font-semibold text-red-400"
-          : "rounded-xl bg-gray-800 px-4 py-3 text-gray-300"
+          ? "flex items-center gap-2 rounded-xl bg-red-950/50 px-3 py-3 font-semibold text-red-400"
+          : "flex items-center gap-2 rounded-xl bg-gray-800 px-3 py-3 text-gray-300"
       }
     >
-      {name}
+      <div className="w-7 h-7 rounded shrink-0 overflow-hidden bg-gray-700 flex items-center justify-center text-gray-500 text-[10px] select-none">
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt={`${name} logo`} className="w-full h-full object-cover" />
+        ) : (
+          name.charAt(0).toUpperCase()
+        )}
+      </div>
+      <span className="truncate">{name}</span>
     </div>
   );
 }
 
 function MatchCard({
   match,
+  matchIndex,
+  slotSize,
   showConnector,
 }: {
   match: MatchWithTeams;
+  matchIndex: number;
+  slotSize: number;
   showConnector: boolean;
 }) {
+  const isTopOfPair = matchIndex % 2 === 0;
+
   return (
-    <div className="relative">
-      <div className="rounded-2xl border border-gray-700 bg-gray-900 p-3">
+    // Each match occupies a fixed slot; card is vertically centered within it
+    <div className="relative flex items-center" style={{ height: `${slotSize}px` }}>
+      <div className="relative w-full rounded-2xl border border-gray-700 bg-gray-900 p-3">
         <div className="space-y-2">
           <TeamSlot
             name={match.teamA?.teamName ?? "TBD"}
+            logoUrl={match.teamA?.logoUrl}
             isWinner={match.winnerId === match.teamAId}
           />
           <TeamSlot
             name={match.teamB?.teamName ?? "TBD"}
+            logoUrl={match.teamB?.logoUrl}
             isWinner={match.winnerId === match.teamBId}
           />
         </div>
@@ -50,8 +74,36 @@ function MatchCard({
           <span>{match.winner ? `Winner: ${match.winner.teamName}` : "Pending"}</span>
         </div>
       </div>
+
       {showConnector && (
-        <div className="pointer-events-none absolute right-[-24px] top-1/2 h-px w-6 -translate-y-1/2 bg-gray-600" />
+        <>
+          {/* Horizontal stub: card right edge → middle of the gap */}
+          <div
+            className="absolute bg-gray-600 pointer-events-none"
+            style={{ top: "50%", left: "100%", width: `${COL_GAP / 2}px`, height: "1px", transform: "translateY(-0.5px)" }}
+          />
+
+          {isTopOfPair ? (
+            <>
+              {/* Vertical bar: top card center → pair midpoint (= bottom of this slot) */}
+              <div
+                className="absolute bg-gray-600 pointer-events-none"
+                style={{ top: "50%", left: `calc(100% + ${COL_GAP / 2}px)`, width: "1px", height: `${slotSize / 2}px` }}
+              />
+              {/* Horizontal: pair midpoint → next card left edge */}
+              <div
+                className="absolute bg-gray-600 pointer-events-none"
+                style={{ top: `${slotSize}px`, left: `calc(100% + ${COL_GAP / 2}px)`, width: `${COL_GAP / 2}px`, height: "1px", transform: "translateY(-0.5px)" }}
+              />
+            </>
+          ) : (
+            /* Vertical bar: pair midpoint (= top of this slot) → bottom card center */
+            <div
+              className="absolute bg-gray-600 pointer-events-none"
+              style={{ top: "0", left: `calc(100% + ${COL_GAP / 2}px)`, width: "1px", height: `${slotSize / 2}px` }}
+            />
+          )}
+        </>
       )}
     </div>
   );
@@ -59,30 +111,34 @@ function MatchCard({
 
 export function BracketTree({ rounds, getRoundLabel }: Props) {
   const totalRounds = rounds.length;
-  const treeHeight = Math.max(420, (rounds[0]?.matches.length ?? 1) * 140);
 
   return (
     <div className="overflow-x-auto pb-4">
       <div className="flex min-w-max gap-8">
-        {rounds.map(({ round, matches }, roundIndex) => (
-          <section key={round} className="min-w-[260px]">
-            <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">
-              {getRoundLabel(round, totalRounds)}
-            </h3>
-            <div
-              className="flex flex-col justify-around gap-6"
-              style={{ minHeight: `${treeHeight}px` }}
-            >
-              {matches.map((match) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  showConnector={roundIndex < rounds.length - 1}
-                />
-              ))}
-            </div>
-          </section>
-        ))}
+        {rounds.map(({ round, matches }, roundIndex) => {
+          const isLastRound = roundIndex === rounds.length - 1;
+          // Slot doubles each round so matches stay aligned across columns
+          const slotSize = Math.pow(2, roundIndex) * SLOT_BASE;
+
+          return (
+            <section key={round} className="min-w-[260px]">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">
+                {getRoundLabel(round, totalRounds)}
+              </h3>
+              <div>
+                {matches.map((match, matchIndex) => (
+                  <MatchCard
+                    key={match.id}
+                    match={match}
+                    matchIndex={matchIndex}
+                    slotSize={slotSize}
+                    showConnector={!isLastRound}
+                  />
+                ))}
+              </div>
+            </section>
+          );
+        })}
       </div>
     </div>
   );

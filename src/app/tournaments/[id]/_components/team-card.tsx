@@ -28,8 +28,13 @@ export async function TeamCard({ team }: Props) {
   return (
     <div className="border border-gray-800 rounded-xl p-4">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-14 h-14 rounded-lg border-2 border-dashed border-gray-700 bg-gray-900 shrink-0 flex items-center justify-center text-gray-600 text-xs select-none">
-          Logo
+        <div className="w-14 h-14 rounded-lg bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden text-gray-600 text-xs select-none">
+          {team.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={team.logoUrl} alt={`${team.teamName} logo`} className="w-full h-full object-cover" />
+          ) : (
+            "Logo"
+          )}
         </div>
         <h3 className="font-semibold text-base">{team.teamName}</h3>
       </div>
