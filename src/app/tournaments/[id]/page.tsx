@@ -37,7 +37,7 @@ function statusBadgeClass(status: TournamentStatus): string {
     case TournamentStatus.REGISTRATION_CLOSED:
       return "border-amber-700 bg-amber-950 text-amber-400";
     case TournamentStatus.IN_PROGRESS:
-      return "border-red-700 bg-red-950 text-red-400";
+      return "border-blue-700 bg-blue-950 text-blue-400";
     case TournamentStatus.COMPLETED:
       return "border-slate-600 bg-slate-800 text-slate-400";
     default:
