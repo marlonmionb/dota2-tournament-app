@@ -40,6 +40,7 @@ export default function RegisterTeamPage() {
   const [players, setPlayers] = useState<PlayerState[]>(() =>
     Array.from({ length: 5 }, EMPTY_PLAYER)
   );
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const lookupTimers = useRef<(ReturnType<typeof setTimeout> | null)[]>(
     Array(5).fill(null)
@@ -55,7 +56,7 @@ export default function RegisterTeamPage() {
         <p className="text-gray-600 mb-4">You must be signed in to register a team.</p>
         <Link
           href={`/auth/signin?callbackUrl=/tournaments/${id}/register`}
-          className="rounded-lg bg-red-600 px-4 py-2 text-white font-semibold hover:bg-red-700 transition-colors"
+          className="rounded-lg bg-amber-500 px-4 py-2 text-gray-950 font-semibold hover:bg-amber-400 transition-colors"
         >
           Sign in
         </Link>
@@ -144,7 +145,7 @@ export default function RegisterTeamPage() {
   return (
     <div className="max-w-xl mx-auto p-8">
       <div className="mb-6">
-        <Link href={`/tournaments/${id}`} className="text-sm text-red-500 hover:underline">
+          <Link href={`/tournaments/${id}`} className="text-sm text-amber-500 hover:underline">
           ← Back to tournament
         </Link>
       </div>
@@ -152,7 +153,7 @@ export default function RegisterTeamPage() {
       <h1 className="text-3xl font-bold mb-8">Register Team</h1>
 
       {formError && (
-        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm">
+        <div className="mb-4 rounded-lg bg-red-950/50 border border-red-800 text-red-400 px-4 py-3 text-sm">
           {formError}
         </div>
       )}
@@ -169,10 +170,39 @@ export default function RegisterTeamPage() {
               name="teamName"
               type="text"
               required
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full border border-gray-700 bg-gray-900 text-gray-100 placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
 
+          {/* Team Logo */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Team Logo <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-700 bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden text-gray-600 text-xs select-none">
+                {logoPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoPreview} alt="Team logo preview" className="w-full h-full object-cover" />
+                ) : (
+                  "Logo"
+                )}
+              </div>
+              <input
+                id="teamLogo"
+                name="teamLogo"
+                type="file"
+                accept="image/*"
+                disabled
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setLogoPreview(URL.createObjectURL(file));
+                }}
+                className="text-sm text-gray-500 file:mr-3 file:rounded-lg file:border file:border-gray-200 file:px-3 file:py-1.5 file:text-xs file:font-medium file:bg-white hover:file:bg-gray-50 cursor-not-allowed opacity-50"
+              />
+              <span className="text-xs text-gray-400">Upload coming soon</span>
+            </div>
+          </div>
         </div>
 
         {/* Players */}
@@ -197,13 +227,13 @@ export default function RegisterTeamPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-white font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 rounded-lg bg-amber-500 px-4 py-2 text-gray-950 font-semibold hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? "Registering..." : "Register Team"}
           </button>
           <Link
             href={`/tournaments/${id}`}
-            className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50 transition-colors"
+            className="rounded-lg border border-gray-700 px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors"
           >
             Cancel
           </Link>
@@ -225,7 +255,7 @@ type PlayerCardProps = {
 
 function PlayerCard({ index, isCaptain, player, onSteamInputChange, onNicknameChange }: PlayerCardProps) {
   return (
-    <div className={`border rounded-lg p-4 space-y-3 ${isCaptain ? "border-amber-400 bg-amber-50/40" : ""}`}>
+    <div className={`border rounded-lg p-4 space-y-3 ${isCaptain ? "border-amber-700 bg-amber-950/30" : "border-gray-700"}`}>
       <div className="flex items-center gap-2">
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
           Player {index + 1}
@@ -247,7 +277,7 @@ function PlayerCard({ index, isCaptain, player, onSteamInputChange, onNicknameCh
             value={player.input}
             onChange={(e) => onSteamInputChange(index, e.target.value)}
             placeholder="e.g. 76561198006409530 or 46143802"
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 pr-8"
+            className="w-full border border-gray-700 bg-gray-900 text-gray-100 placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 pr-8"
           />
           {player.loading && (
             <span className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -265,7 +295,7 @@ function PlayerCard({ index, isCaptain, player, onSteamInputChange, onNicknameCh
 
       {/* Profile preview */}
       {player.profile && (
-        <div className="flex items-center gap-3 rounded-lg bg-gray-50 border px-3 py-2">
+        <div className="flex items-center gap-3 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={player.profile.profile.avatarmedium}
@@ -293,7 +323,7 @@ function PlayerCard({ index, isCaptain, player, onSteamInputChange, onNicknameCh
             required
             value={player.nickname}
             onChange={(e) => onNicknameChange(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full border border-gray-700 bg-gray-900 text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
       )}

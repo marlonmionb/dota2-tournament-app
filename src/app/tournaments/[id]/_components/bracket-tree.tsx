@@ -16,8 +16,8 @@ function TeamSlot({
     <div
       className={
         isWinner
-          ? "rounded-xl bg-red-50 px-4 py-3 font-semibold text-red-900"
-          : "rounded-xl bg-stone-50 px-4 py-3 text-stone-600"
+          ? "rounded-xl bg-red-950/50 px-4 py-3 font-semibold text-red-400"
+          : "rounded-xl bg-gray-800 px-4 py-3 text-gray-300"
       }
     >
       {name}
@@ -34,7 +34,7 @@ function MatchCard({
 }) {
   return (
     <div className="relative">
-      <div className="rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
+      <div className="rounded-2xl border border-gray-700 bg-gray-900 p-3">
         <div className="space-y-2">
           <TeamSlot
             name={match.teamA?.teamName ?? "TBD"}
@@ -45,13 +45,13 @@ function MatchCard({
             isWinner={match.winnerId === match.teamBId}
           />
         </div>
-        <div className="mt-3 flex items-center justify-between text-xs text-stone-500">
+        <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
           <span>Match</span>
           <span>{match.winner ? `Winner: ${match.winner.teamName}` : "Pending"}</span>
         </div>
       </div>
       {showConnector && (
-        <div className="pointer-events-none absolute right-[-24px] top-1/2 h-px w-6 -translate-y-1/2 bg-stone-300" />
+        <div className="pointer-events-none absolute right-[-24px] top-1/2 h-px w-6 -translate-y-1/2 bg-gray-600" />
       )}
     </div>
   );
@@ -66,7 +66,7 @@ export function BracketTree({ rounds, getRoundLabel }: Props) {
       <div className="flex min-w-max gap-8">
         {rounds.map(({ round, matches }, roundIndex) => (
           <section key={round} className="min-w-[260px]">
-            <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-stone-400">
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">
               {getRoundLabel(round, totalRounds)}
             </h3>
             <div

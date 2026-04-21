@@ -3,10 +3,12 @@ import { auth } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { TournamentStatus } from "@prisma/client";
 import Link from "next/link";
+import { Suspense } from "react";
 import { TournamentStatusAction } from "./_components/tournament-status-actions";
 import { GenerateBracketAction } from "./_components/generate-bracket-action";
 import { BracketTree } from "./_components/bracket-tree";
-import type { MatchWithTeams, BracketRound } from "@/types";
+import { TeamCard } from "./_components/team-card";
+import type { MatchWithTeams, BracketRound, TeamWithPlayers } from "@/types";
 
 function groupMatchesByRound(matches: MatchWithTeams[]): BracketRound[] {
   const map = new Map<number, MatchWithTeams[]>();
@@ -26,6 +28,21 @@ function roundLabel(round: number, totalRounds: number): string {
   if (fromEnd === 1) return "Semifinal";
   if (fromEnd === 2) return "Quarterfinal";
   return `Round ${round}`;
+}
+
+function statusBadgeClass(status: TournamentStatus): string {
+  switch (status) {
+    case TournamentStatus.REGISTRATION_OPEN:
+      return "border-green-700 bg-green-950 text-green-400";
+    case TournamentStatus.REGISTRATION_CLOSED:
+      return "border-amber-700 bg-amber-950 text-amber-400";
+    case TournamentStatus.IN_PROGRESS:
+      return "border-red-700 bg-red-950 text-red-400";
+    case TournamentStatus.COMPLETED:
+      return "border-slate-600 bg-slate-800 text-slate-400";
+    default:
+      return "border-gray-700 bg-gray-800 text-gray-300";
+  }
 }
 
 function statusLabel(status: TournamentStatus): string {
@@ -53,21 +70,24 @@ export default async function TournamentPage({
   return (
     <div className="max-w-4xl mx-auto p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">{tournament.name}</h1>
+        <h1 className="text-3xl font-bold leading-tight break-words max-w-prose">{tournament.name}</h1>
+        <div className="flex flex-wrap items-center gap-2 mt-2">
+          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusBadgeClass(tournament.status)}`}>
+            {statusLabel(tournament.status)}
+          </span>
+          <span className="text-xs text-gray-500">Max teams: {tournament.maxTeams} · Single Elimination</span>
+        </div>
         {tournament.description && (
-          <p className="text-gray-600 mt-2">{tournament.description}</p>
+          <p className="text-gray-400 mt-2 text-sm">{tournament.description}</p>
         )}
-        <p className="text-sm text-gray-400 mt-1">
-          Status: <span className="font-medium">{statusLabel(tournament.status)}</span> · Max teams: {tournament.maxTeams} · Format: Single Elimination
-        </p>
         <div className="mt-4 flex flex-wrap gap-3 items-start">
           {tournament.status === TournamentStatus.REGISTRATION_OPEN && (
             <Link
               href={`/tournaments/${tournament.id}/register`}
               className={
                 isOrganizer
-                  ? "inline-block rounded-lg border border-amber-300 bg-white px-5 py-2 text-sm text-amber-800 font-semibold hover:border-amber-400 hover:bg-amber-50 transition-colors"
-                  : "inline-block rounded-lg bg-red-600 px-5 py-2 text-sm text-white font-semibold hover:bg-red-700 transition-colors"
+                  ? "inline-block rounded-lg border border-amber-700 bg-gray-950 px-5 py-2 text-sm text-amber-400 font-semibold hover:border-amber-500 hover:bg-amber-950/30 transition-colors"
+                  : "inline-block rounded-lg bg-amber-500 px-5 py-2 text-sm text-gray-950 font-semibold hover:bg-amber-400 transition-colors"
               }
             >
               Register Team
@@ -98,23 +118,43 @@ export default async function TournamentPage({
 
       {/* Teams */}
       <section className="mb-10">
-        <h2 className="text-xl font-semibold mb-4">
-          Teams ({tournament.teams.length}/{tournament.maxTeams})
-        </h2>
+        <div className="flex items-baseline justify-between mb-2">
+          <h2 className="text-xl font-semibold">
+            Teams ({tournament.teams.length}/{tournament.maxTeams})
+          </h2>
+        </div>
+        <div className="w-full bg-gray-800 rounded-full h-1.5 mb-4">
+          <div
+            className="bg-amber-500 h-1.5 rounded-full transition-all"
+            style={{ width: `${(tournament.teams.length / tournament.maxTeams) * 100}%` }}
+          />
+        </div>
         {tournament.teams.length === 0 ? (
           <p className="text-gray-500 text-sm">No teams registered yet.</p>
         ) : (
-          <ul className="space-y-2">
-            {tournament.teams.map((team) => (
-              <li key={team.id} className="border rounded-lg px-4 py-3">
-                <p className="font-medium">{team.teamName}</p>
-                  <p className="text-xs text-gray-500">
-                  Captain: {team.captainName} ·{" "}
-                  {team.players.map((p) => p.nickname).join(", ")}
-                </p>
-              </li>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {(tournament.teams as TeamWithPlayers[]).map((team) => (
+              <Suspense
+                key={team.id}
+                fallback={
+                  <div className="border border-gray-800 rounded-xl p-4 animate-pulse">
+                    <div className="h-4 bg-gray-800 rounded w-1/2 mb-3" />
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-full bg-gray-800" />
+                        <div className="flex-1 space-y-1">
+                          <div className="h-3 bg-gray-800 rounded w-2/3" />
+                          <div className="h-2 bg-gray-800 rounded w-1/3" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                }
+              >
+                <TeamCard team={team} />
+              </Suspense>
             ))}
-          </ul>
+          </div>
         )}
       </section>
 
@@ -126,7 +166,7 @@ export default async function TournamentPage({
           <div className="mb-4 flex items-end justify-between gap-4">
             <div>
               <h2 className="text-xl font-semibold">Bracket</h2>
-              <p className="mt-1 text-sm text-stone-500">
+              <p className="mt-1 text-sm text-gray-500">
                 {hasBracket
                   ? "Single-elimination tree with winners advancing automatically."
                   : "No bracket generated yet."}
@@ -137,7 +177,7 @@ export default async function TournamentPage({
           {hasBracket ? (
             <BracketTree rounds={rounds} getRoundLabel={roundLabel} />
           ) : (
-            <div className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 px-5 py-6 text-sm text-stone-600">
+            <div className="rounded-2xl border border-dashed border-gray-700 bg-gray-900 px-5 py-6 text-sm text-gray-400">
               {isOrganizer
                 ? "Registration is closed. Use Generate Bracket to create the tournament tree."
                 : "The organizer has not generated the bracket yet."}

@@ -17,8 +17,8 @@ export function TournamentStatusAction({ tournamentId, action, label }: Props) {
   const isCloseAction = action === "close";
 
   const buttonClass = isCloseAction
-    ? "rounded-lg bg-amber-600 px-5 py-2 text-sm text-white font-semibold hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-    : "rounded-lg bg-red-600 px-5 py-2 text-sm text-white font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+    ? "rounded-lg border border-red-800 bg-red-900 px-5 py-2 text-sm text-red-300 font-semibold hover:bg-red-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+    : "rounded-lg bg-amber-500 px-5 py-2 text-sm text-gray-950 font-semibold hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 
   async function handleClick() {
     if (isCloseAction) {
@@ -58,12 +58,7 @@ export function TournamentStatusAction({ tournamentId, action, label }: Props) {
       >
         {loading ? "Updating..." : label}
       </button>
-      {isCloseAction && (
-        <p className="mt-2 text-xs text-amber-700">
-          After closing, no new teams can register.
-        </p>
-      )}
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
     </div>
   );
 }

@@ -21,7 +21,7 @@ export default function NewTournamentPage() {
         <p className="text-gray-600 mb-4">You must be signed in to create a tournament.</p>
         <Link
           href="/auth/signin?callbackUrl=/tournaments/new"
-          className="rounded-lg bg-red-600 px-4 py-2 text-white font-semibold hover:bg-red-700 transition-colors"
+          className="rounded-lg bg-amber-500 px-4 py-2 text-gray-950 font-semibold hover:bg-amber-400 transition-colors"
         >
           Sign in
         </Link>
@@ -70,7 +70,7 @@ export default function NewTournamentPage() {
       <h1 className="text-3xl font-bold mb-8">Create Tournament</h1>
 
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm">
+        <div className="mb-4 rounded-lg bg-red-950/50 border border-red-800 text-red-400 px-4 py-3 text-sm">
           {error}
         </div>
       )}
@@ -85,7 +85,7 @@ export default function NewTournamentPage() {
             name="name"
             type="text"
             required
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-700 bg-gray-900 text-gray-100 placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
 
@@ -97,7 +97,7 @@ export default function NewTournamentPage() {
             id="description"
             name="description"
             rows={3}
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-700 bg-gray-900 text-gray-100 placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
 
@@ -109,7 +109,7 @@ export default function NewTournamentPage() {
             id="maxTeams"
             name="maxTeams"
             required
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-700 bg-gray-900 text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           >
             {[2, 4, 8, 16].map((n) => (
               <option key={n} value={n}>
@@ -128,7 +128,7 @@ export default function NewTournamentPage() {
             name="registrationDeadline"
             type="datetime-local"
             required
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-700 bg-gray-900 text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
 
@@ -141,14 +141,14 @@ export default function NewTournamentPage() {
             name="startDate"
             type="datetime-local"
             required
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-700 bg-gray-900 text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-red-600 px-4 py-2 text-white font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors"
+          className="w-full rounded-lg bg-amber-500 px-4 py-2 text-gray-950 font-semibold hover:bg-amber-400 disabled:opacity-50 transition-colors"
         >
           {loading ? "Creating..." : "Create Tournament"}
         </button>
