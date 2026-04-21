@@ -4,9 +4,10 @@ import {
   findAllTournaments,
   findTournamentById,
   updateTournamentStatus,
+  updateTournament as dbUpdate,
 } from "@/repositories/tournament-repository";
 import { findTeamsByTournament } from "@/repositories/team-repository";
-import { createTournamentSchema, type CreateTournamentInput } from "@/lib/validations";
+import { createTournamentSchema, updateTournamentSchema, type CreateTournamentInput } from "@/lib/validations";
 
 export async function getTournaments() {
   return findAllTournaments();
@@ -24,6 +25,20 @@ export async function createTournament(
 ) {
   const data = createTournamentSchema.parse(input);
   return dbCreate(organizerId, data);
+}
+
+export async function editTournament(
+  tournamentId: string,
+  organizerId: string,
+  input: unknown
+) {
+  const tournament = await findTournamentById(tournamentId);
+  if (!tournament) throw new Error("Tournament not found");
+  if (tournament.organizerId !== organizerId) throw new Error("Forbidden");
+  if (tournament.status !== TournamentStatus.DRAFT)
+    throw new Error("Only draft tournaments can be edited");
+  const data = updateTournamentSchema.parse(input);
+  return dbUpdate(tournamentId, data);
 }
 
 export async function openRegistration(tournamentId: string, organizerId: string) {

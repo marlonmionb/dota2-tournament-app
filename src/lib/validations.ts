@@ -41,3 +41,6 @@ export const matchResultSchema = z.object({
 export type CreateTournamentInput = z.infer<typeof createTournamentSchema>;
 export type RegisterTeamInput = z.infer<typeof registerTeamSchema>;
 export type MatchResultInput = z.infer<typeof matchResultSchema>;
+
+export const updateTournamentSchema = createTournamentSchema.partial();
+export type UpdateTournamentInput = z.infer<typeof updateTournamentSchema>;

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getTournamentById, openRegistration, closeRegistration } from "@/services/tournament-service";
+import { getTournamentById, openRegistration, closeRegistration, editTournament } from "@/services/tournament-service";
 
 export async function PATCH(
   request: Request,
@@ -22,6 +22,33 @@ export async function PATCH(
       return NextResponse.json(tournament);
     }
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "Tournament not found") {
+        return NextResponse.json({ error: error.message }, { status: 404 });
+      }
+      if (error.message === "Forbidden") {
+        return NextResponse.json({ error: error.message }, { status: 403 });
+      }
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const { id } = await params;
+    const body = await request.json();
+    const tournament = await editTournament(id, session.user.id, body);
+    return NextResponse.json(tournament);
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === "Tournament not found") {

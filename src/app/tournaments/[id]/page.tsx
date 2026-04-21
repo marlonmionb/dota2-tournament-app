@@ -94,6 +94,14 @@ export default async function TournamentPage({
             </Link>
           )}
           {isOrganizer && tournament.status === TournamentStatus.DRAFT && (
+            <Link
+              href={`/tournaments/${tournament.id}/edit`}
+              className="inline-block rounded-lg border border-gray-600 bg-gray-900 px-5 py-2 text-sm text-gray-300 font-semibold hover:bg-gray-800 transition-colors"
+            >
+              Edit
+            </Link>
+          )}
+          {isOrganizer && tournament.status === TournamentStatus.DRAFT && (
             <TournamentStatusAction
               tournamentId={tournament.id}
               action="open"

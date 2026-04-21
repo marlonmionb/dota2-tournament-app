@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { TournamentStatus } from "@prisma/client";
-import type { CreateTournamentInput } from "@/lib/validations";
+import type { CreateTournamentInput, UpdateTournamentInput } from "@/lib/validations";
 
 export async function findAllTournaments() {
   return prisma.tournament.findMany({
@@ -37,4 +37,11 @@ export async function updateTournamentStatus(
   status: TournamentStatus
 ) {
   return prisma.tournament.update({ where: { id }, data: { status } });
+}
+
+export async function updateTournament(
+  id: string,
+  data: UpdateTournamentInput
+) {
+  return prisma.tournament.update({ where: { id }, data });
 }
