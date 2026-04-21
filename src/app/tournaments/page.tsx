@@ -1,5 +1,6 @@
 import { getTournaments } from "@/services/tournament-service";
 import Link from "next/link";
+import Image from "next/image";
 import { TournamentStatus } from "@prisma/client";
 
 const statusLabels: Record<TournamentStatus, string> = {
@@ -39,32 +40,79 @@ export default async function TournamentsPage() {
         </p>
       ) : (
         <ul className="space-y-4">
-          {tournaments.map((t) => (
-            <li key={t.id}>
-              <Link
-                href={`/tournaments/${t.id}`}
-                className="block border border-gray-800 rounded-lg p-6 hover:border-amber-500 hover:shadow-sm transition-all"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className="text-xl font-semibold">{t.name}</h2>
-                    {t.description && (
-                      <p className="text-gray-400 mt-1 text-sm">{t.description}</p>
+          {tournaments.map((t) => {
+            const teamCount = t._count.teams;
+            const fillPct = Math.round((teamCount / t.maxTeams) * 100);
+
+            return (
+              <li key={t.id}>
+                <Link
+                  href={`/tournaments/${t.id}`}
+                  className="flex gap-4 border border-gray-800 rounded-lg overflow-hidden hover:border-amber-500 transition-all"
+                >
+                  {/* Banner */}
+                  <div className="w-36 shrink-0 bg-gray-900 relative">
+                    {t.imageUrl ? (
+                      <Image
+                        src={t.imageUrl}
+                        alt={t.name}
+                        fill
+                        className="object-cover"
+                        sizes="144px"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center min-h-[120px]">
+                        <span className="text-3xl opacity-20">🏆</span>
+                      </div>
                     )}
-                    <p className="text-sm text-gray-400 mt-2">
-                      Max teams: {t.maxTeams} · Starts{" "}
-                      {new Date(t.startDate).toLocaleDateString()}
-                    </p>
                   </div>
-                  <span
-                    className={`text-xs font-medium px-2 py-1 rounded-full ${statusColors[t.status]}`}
-                  >
-                    {statusLabels[t.status]}
-                  </span>
-                </div>
-              </Link>
-            </li>
-          ))}
+
+                  {/* Content */}
+                  <div className="flex flex-col justify-between flex-1 py-4 pr-5 gap-3">
+                    <div className="flex justify-between items-start gap-2">
+                      <div>
+                        <h2 className="text-xl font-semibold leading-tight">{t.name}</h2>
+                        {t.description && (
+                          <p className="text-gray-400 mt-1 text-sm line-clamp-2">{t.description}</p>
+                        )}
+                      </div>
+                      <span className={`shrink-0 text-xs font-medium px-2 py-1 rounded-full ${statusColors[t.status]}`}>
+                        {statusLabels[t.status]}
+                      </span>
+                    </div>
+
+                    {/* Meta row */}
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
+                      <span>Starts {new Date(t.startDate).toLocaleDateString()}</span>
+                      {t.entryFee != null && t.entryFee > 0 && (
+                        <span className="text-amber-400 font-medium">Entry: ${t.entryFee.toFixed(2)} / team</span>
+                      )}
+                      {t.entryFee === 0 && (
+                        <span className="text-green-400 font-medium">Free entry</span>
+                      )}
+                      {t.prizePool && (
+                        <span className="text-yellow-400 font-medium">🏅 {t.prizePool}</span>
+                      )}
+                    </div>
+
+                    {/* Teams progress bar */}
+                    <div>
+                      <div className="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>Teams registered</span>
+                        <span>{teamCount} / {t.maxTeams}</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-gray-800 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-amber-500 transition-all"
+                          style={{ width: `${fillPct}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

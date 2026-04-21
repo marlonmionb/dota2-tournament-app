@@ -5,7 +5,10 @@ import type { CreateTournamentInput, UpdateTournamentInput } from "@/lib/validat
 export async function findAllTournaments() {
   return prisma.tournament.findMany({
     orderBy: { createdAt: "desc" },
-    include: { organizer: { select: { id: true, name: true, image: true } } },
+    include: {
+      organizer: { select: { id: true, name: true, image: true } },
+      _count: { select: { teams: true } },
+    },
   });
 }
 
