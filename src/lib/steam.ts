@@ -93,7 +93,9 @@ export function rankTierColor(rankTier: number): string {
 
 /** Fetches a player profile from the OpenDota public API. */
 export async function fetchPlayerProfile(accountId: number): Promise<OpenDotaPlayer> {
-  const res = await fetch(`https://api.opendota.com/api/players/${accountId}`);
+  const res = await fetch(`https://api.opendota.com/api/players/${accountId}`, {
+    next: { revalidate: 3600 },
+  });
   if (!res.ok) throw new Error(`OpenDota API returned ${res.status}`);
   const data: unknown = await res.json();
   if (
