@@ -19,6 +19,7 @@ export const createTournamentSchema = z.object({
 export const registerTeamSchema = z.object({
   teamName: z.string().min(1, "Team name is required").max(100),
   captainName: z.string().min(1, "Captain name is required").max(100),
+  logoUrl: z.string().url().optional().or(z.literal("")),
   players: z
     .array(
       z.object({

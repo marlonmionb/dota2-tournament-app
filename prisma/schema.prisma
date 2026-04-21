@@ -91,6 +91,7 @@ model Team {
   id             String     @id @default(uuid())
   teamName       String     @map("team_name")
   captainName    String     @map("captain_name")
+  logoUrl        String?    @map("logo_url")
   tournamentId   String     @map("tournament_id")
   tournament     Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   players        Player[]

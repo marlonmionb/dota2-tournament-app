@@ -23,6 +23,7 @@ export async function createTeam(
     data: {
       teamName: data.teamName,
       captainName: data.captainName,
+      logoUrl: data.logoUrl || null,
       tournamentId,
       players: { create: data.players },
     },

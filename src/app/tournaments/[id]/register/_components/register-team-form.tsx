@@ -38,6 +38,9 @@ export default function RegisterTeamForm({ tournamentId }: { tournamentId: strin
     Array.from({ length: 5 }, EMPTY_PLAYER)
   );
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
 
   const lookupTimers = useRef<(ReturnType<typeof setTimeout> | null)[]>(
     Array(5).fill(null)
@@ -97,6 +100,7 @@ export default function RegisterTeamForm({ tournamentId }: { tournamentId: strin
     const data = {
       teamName: (form.elements.namedItem("teamName") as HTMLInputElement).value,
       captainName: players[0].nickname,
+      logoUrl: logoUrl ?? "",
       players: players.map((p) => ({ nickname: p.nickname, steamId: p.steamId })),
     };
 
@@ -155,10 +159,10 @@ export default function RegisterTeamForm({ tournamentId }: { tournamentId: strin
 
           {/* Team Logo */}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium mb-1" htmlFor="teamLogo">
               Team Logo <span className="text-gray-400 font-normal">(optional)</span>
             </label>
-            <div className="flex items-center gap-4">
+            <div className="flex items-start gap-4">
               <div className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-700 bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden text-gray-600 text-xs select-none">
                 {logoPreview ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -167,19 +171,44 @@ export default function RegisterTeamForm({ tournamentId }: { tournamentId: strin
                   "Logo"
                 )}
               </div>
-              <input
-                id="teamLogo"
-                name="teamLogo"
-                type="file"
-                accept="image/*"
-                disabled
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) setLogoPreview(URL.createObjectURL(file));
-                }}
-                className="text-sm text-gray-500 file:mr-3 file:rounded-lg file:border file:border-gray-200 file:px-3 file:py-1.5 file:text-xs file:font-medium file:bg-white hover:file:bg-gray-50 cursor-not-allowed opacity-50"
-              />
-              <span className="text-xs text-gray-400">Upload coming soon</span>
+              <div className="flex flex-col gap-1">
+                <input
+                  id="teamLogo"
+                  name="teamLogo"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  disabled={logoUploading}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setLogoError(null);
+                    setLogoPreview(URL.createObjectURL(file));
+                    setLogoUploading(true);
+                    try {
+                      const fd = new FormData();
+                      fd.append("file", file);
+                      const res = await fetch("/api/upload/logo", { method: "POST", body: fd });
+                      const json = await res.json();
+                      if (!res.ok) {
+                        setLogoError(json.error ?? "Upload failed");
+                        setLogoPreview(null);
+                      } else {
+                        setLogoUrl(json.url);
+                      }
+                    } catch {
+                      setLogoError("Upload failed. Please try again.");
+                      setLogoPreview(null);
+                    } finally {
+                      setLogoUploading(false);
+                    }
+                  }}
+                  className="text-sm text-gray-400 file:mr-3 file:rounded-lg file:border file:border-gray-600 file:px-3 file:py-1.5 file:text-xs file:font-medium file:bg-gray-800 file:text-gray-200 hover:file:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <p className="text-xs text-gray-500">JPEG, PNG, WebP or GIF · max 2 MB</p>
+                {logoUploading && <p className="text-xs text-amber-400">Uploading…</p>}
+                {logoError && <p className="text-xs text-red-500">{logoError}</p>}
+                {logoUrl && !logoUploading && <p className="text-xs text-green-500">Logo uploaded ✓</p>}
+              </div>
             </div>
           </div>
         </div>
