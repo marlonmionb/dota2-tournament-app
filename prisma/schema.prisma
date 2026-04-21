@@ -76,6 +76,10 @@ model Tournament {
   registrationDeadline DateTime         @map("registration_deadline")
   format               TournamentFormat @default(SINGLE_ELIMINATION)
   status               TournamentStatus @default(DRAFT)
+  imageUrl             String?          @map("image_url")
+  discordUrl           String?          @map("discord_url")
+  entryFee             Float?           @map("entry_fee")
+  prizePool            String?          @map("prize_pool")
   organizerId          String           @map("organizer_id")
   organizer            User             @relation(fields: [organizerId], references: [id])
   teams                Team[]

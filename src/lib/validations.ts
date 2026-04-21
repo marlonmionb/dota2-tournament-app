@@ -14,6 +14,10 @@ export const createTournamentSchema = z.object({
   startDate: z.coerce.date(),
   registrationDeadline: z.coerce.date(),
   format: z.nativeEnum(TournamentFormat).default(TournamentFormat.SINGLE_ELIMINATION),
+  imageUrl: z.string().url().optional().or(z.literal("")),
+  discordUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  entryFee: z.coerce.number().min(0, "Entry fee cannot be negative").optional(),
+  prizePool: z.string().max(200).optional(),
 });
 
 export const registerTeamSchema = z.object({
