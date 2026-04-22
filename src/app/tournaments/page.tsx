@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { TournamentStatus } from "@prisma/client";
 import { Trophy } from "lucide-react";
+import { currencySymbol } from "@/lib/currencies";
 
 const statusLabels: Record<TournamentStatus, string> = {
   DRAFT: "Draft",
@@ -86,7 +87,7 @@ export default async function TournamentsPage() {
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
                       <span>Starts {new Date(t.startDate).toLocaleDateString()}</span>
                       {t.entryFee != null && t.entryFee > 0 && (
-                        <span className="text-amber-400 font-medium">Entry: ${t.entryFee.toFixed(2)} / team</span>
+                        <span className="text-amber-400 font-medium">Entry: {currencySymbol(t.currency)}{t.entryFee.toFixed(2)} / team</span>
                       )}
                       {t.entryFee === 0 && (
                         <span className="text-green-400 font-medium">Free entry</span>
@@ -94,7 +95,7 @@ export default async function TournamentsPage() {
                       {t.prizePool && (
                         <span className="flex items-center gap-1 text-yellow-400 font-medium">
                           <Trophy className="w-3.5 h-3.5" />
-                          ${t.prizePool}
+                          {currencySymbol(t.currency)}{t.prizePool}
                         </span>
                       )}
                     </div>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Trophy, DollarSign } from "lucide-react";
 import { Suspense } from "react";
+import { currencySymbol } from "@/lib/currencies";
 import { TournamentStatusAction } from "./_components/tournament-status-actions";
 import { GenerateBracketAction } from "./_components/generate-bracket-action";
 import { BracketTree } from "./_components/bracket-tree";
@@ -107,13 +108,13 @@ export default async function TournamentPage({
             {tournament.prizePool && (
               <span className="flex items-center gap-1.5 text-amber-400">
                 <Trophy className="w-4 h-4" />
-                <span>${tournament.prizePool}</span>
+                <span>{currencySymbol(tournament.currency)}{tournament.prizePool}</span>
               </span>
             )}
             {tournament.entryFee != null && (
               <span className="flex items-center gap-1.5 text-gray-300">
                 <DollarSign className="w-4 h-4" />
-                <span>Entry fee: ${tournament.entryFee}</span>
+                <span>Entry fee: {currencySymbol(tournament.currency)}{tournament.entryFee}</span>
               </span>
             )}
             {tournament.discordUrl && (

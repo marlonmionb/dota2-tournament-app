@@ -18,6 +18,7 @@ export const createTournamentSchema = z.object({
   discordUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   entryFee: z.coerce.number().min(0, "Entry fee cannot be negative").optional(),
   prizePool: z.string().max(200).optional(),
+  currency: z.string().min(1).max(10).default("USD"),
 });
 
 export const registerTeamSchema = z.object({

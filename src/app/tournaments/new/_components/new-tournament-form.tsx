@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { CURRENCIES } from "@/lib/currencies";
 
 export default function NewTournamentForm() {
   const router = useRouter();
@@ -56,6 +57,7 @@ export default function NewTournamentForm() {
       discordUrl: (form.elements.namedItem("discordUrl") as HTMLInputElement).value || undefined,
       entryFee: entryFeeRaw !== "" ? parseFloat(entryFeeRaw) : undefined,
       prizePool: (form.elements.namedItem("prizePool") as HTMLInputElement).value || undefined,
+      currency: (form.elements.namedItem("currency") as HTMLSelectElement).value,
     };
 
     try {
@@ -202,10 +204,26 @@ export default function NewTournamentForm() {
           />
         </div>
 
+        <div>
+          <label className="block text-sm font-medium mb-1" htmlFor="currency">
+            Currency
+          </label>
+          <select
+            id="currency"
+            name="currency"
+            defaultValue="USD"
+            className="w-full border border-gray-700 bg-gray-900 text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          >
+            {CURRENCIES.map((c) => (
+              <option key={c.code} value={c.code}>{c.label}</option>
+            ))}
+          </select>
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1" htmlFor="entryFee">
-              Entry Fee per Team ($)
+              Entry Fee per Team
             </label>
             <input
               id="entryFee"
@@ -225,7 +243,7 @@ export default function NewTournamentForm() {
               id="prizePool"
               name="prizePool"
               type="text"
-              placeholder="e.g. $500, Steam Keys…"
+              placeholder="e.g. 500, Steam Keys…"
               className="w-full border border-gray-700 bg-gray-900 text-gray-100 placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
