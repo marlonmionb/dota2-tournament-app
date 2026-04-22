@@ -1,6 +1,24 @@
 import { z } from "zod";
 import { TournamentFormat } from "@prisma/client";
 
+const httpsUrl = z
+  .string()
+  .url()
+  .refine((url) => url.startsWith("https://"), {
+    message: "URL must use HTTPS",
+  });
+
+const supabaseStorageUrl = z
+  .string()
+  .url()
+  .refine(
+    (url) =>
+      url.startsWith(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/`
+      ),
+    { message: "Image must be uploaded via the platform" }
+  );
+
 export const createTournamentSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   description: z.string().optional(),
@@ -14,8 +32,8 @@ export const createTournamentSchema = z.object({
   startDate: z.coerce.date(),
   registrationDeadline: z.coerce.date(),
   format: z.nativeEnum(TournamentFormat).default(TournamentFormat.SINGLE_ELIMINATION),
-  imageUrl: z.string().url().optional().or(z.literal("")),
-  discordUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  imageUrl: supabaseStorageUrl.optional().or(z.literal("")),
+  discordUrl: httpsUrl.optional().or(z.literal("")),
   entryFee: z.coerce.number().min(0, "Entry fee cannot be negative").optional(),
   prizePool: z.string().max(200).optional(),
   currency: z.string().min(1).max(10).default("USD"),
@@ -24,7 +42,7 @@ export const createTournamentSchema = z.object({
 export const registerTeamSchema = z.object({
   teamName: z.string().min(1, "Team name is required").max(100),
   captainName: z.string().min(1, "Captain name is required").max(100),
-  logoUrl: z.string().url().optional().or(z.literal("")),
+  logoUrl: supabaseStorageUrl.optional().or(z.literal("")),
   players: z
     .array(
       z.object({
