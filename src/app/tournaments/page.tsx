@@ -2,6 +2,7 @@ import { getTournaments } from "@/services/tournament-service";
 import Link from "next/link";
 import Image from "next/image";
 import { TournamentStatus } from "@prisma/client";
+import { Trophy } from "lucide-react";
 
 const statusLabels: Record<TournamentStatus, string> = {
   DRAFT: "Draft",
@@ -91,7 +92,10 @@ export default async function TournamentsPage() {
                         <span className="text-green-400 font-medium">Free entry</span>
                       )}
                       {t.prizePool && (
-                        <span className="text-yellow-400 font-medium">🏅 {t.prizePool}</span>
+                        <span className="flex items-center gap-1 text-yellow-400 font-medium">
+                          <Trophy className="w-3.5 h-3.5" />
+                          ${t.prizePool}
+                        </span>
                       )}
                     </div>
 
