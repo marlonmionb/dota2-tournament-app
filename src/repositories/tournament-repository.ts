@@ -48,3 +48,7 @@ export async function updateTournament(
 ) {
   return prisma.tournament.update({ where: { id }, data });
 }
+
+export async function deleteTournamentById(id: string) {
+  return prisma.tournament.delete({ where: { id } });
+}

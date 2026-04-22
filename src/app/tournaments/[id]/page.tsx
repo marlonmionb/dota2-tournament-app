@@ -9,6 +9,7 @@ import { Suspense } from "react";
 import { currencySymbol } from "@/lib/currencies";
 import { TournamentStatusAction } from "./_components/tournament-status-actions";
 import { GenerateBracketAction } from "./_components/generate-bracket-action";
+import { DeleteTournamentAction } from "./_components/delete-tournament-action";
 import { BracketTree } from "./_components/bracket-tree";
 import { TeamCard } from "./_components/team-card";
 import type { MatchWithTeams, BracketRound, TeamWithPlayers } from "@/types";
@@ -173,6 +174,9 @@ export default async function TournamentPage({
             tournament.teams.length >= 2 && (
               <GenerateBracketAction tournamentId={tournament.id} />
             )}
+          {isOrganizer && tournament.status !== TournamentStatus.COMPLETED && (
+            <DeleteTournamentAction tournamentId={tournament.id} />
+          )}
         </div>
       </div>
 
