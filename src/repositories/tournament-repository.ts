@@ -26,6 +26,24 @@ export async function findTournamentById(id: string) {
   });
 }
 
+export async function findTournamentByIdPublic(id: string) {
+  return prisma.tournament.findUnique({
+    where: { id },
+    include: {
+      organizer: { select: { id: true, name: true, image: true } },
+      teams: {
+        include: {
+          players: { select: { id: true, nickname: true } },
+        },
+      },
+      matches: {
+        include: { teamA: true, teamB: true, winner: true },
+        orderBy: [{ round: "asc" }, { createdAt: "asc" }],
+      },
+    },
+  });
+}
+
 export async function createTournament(
   organizerId: string,
   data: CreateTournamentInput

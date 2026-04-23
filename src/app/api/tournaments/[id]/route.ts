@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getTournamentById, openRegistration, closeRegistration, editTournament, deleteTournament } from "@/services/tournament-service";
+import { getTournamentByIdPublic, openRegistration, closeRegistration, editTournament, deleteTournament } from "@/services/tournament-service";
+import { handleApiError } from "@/lib/api-error";
 
 export async function PATCH(
   request: Request,
@@ -23,16 +24,7 @@ export async function PATCH(
     }
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === "Tournament not found") {
-        return NextResponse.json({ error: error.message }, { status: 404 });
-      }
-      if (error.message === "Forbidden") {
-        return NextResponse.json({ error: error.message }, { status: 403 });
-      }
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
@@ -50,16 +42,7 @@ export async function PUT(
     const tournament = await editTournament(id, session.user.id, body);
     return NextResponse.json(tournament);
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === "Tournament not found") {
-        return NextResponse.json({ error: error.message }, { status: 404 });
-      }
-      if (error.message === "Forbidden") {
-        return NextResponse.json({ error: error.message }, { status: 403 });
-      }
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
@@ -69,13 +52,10 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const tournament = await getTournamentById(id);
+    const tournament = await getTournamentByIdPublic(id);
     return NextResponse.json(tournament);
   } catch (error) {
-    if (error instanceof Error && error.message === "Tournament not found") {
-      return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
-    }
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
@@ -92,15 +72,6 @@ export async function DELETE(
     await deleteTournament(id, session.user.id);
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === "Tournament not found") {
-        return NextResponse.json({ error: error.message }, { status: 404 });
-      }
-      if (error.message === "Forbidden") {
-        return NextResponse.json({ error: error.message }, { status: 403 });
-      }
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }

@@ -6,6 +6,17 @@ import {
   findSteamIdsInTournament,
 } from "@/repositories/team-repository";
 import { registerTeamSchema, type RegisterTeamInput } from "@/lib/validations";
+import { parseSteamInput, fetchPlayerProfile } from "@/lib/steam";
+
+async function resolveNickname(steamId: string): Promise<string> {
+  try {
+    const accountId = parseSteamInput(steamId);
+    const profile = await fetchPlayerProfile(accountId);
+    return profile.profile.personaname;
+  } catch {
+    return steamId; // fallback if OpenDota is unavailable
+  }
+}
 
 export async function registerTeam(
   tournamentId: string,
@@ -45,7 +56,15 @@ export async function registerTeam(
   if (uniqueSteamIds.size !== steamIds.length)
     throw new Error("Duplicate Steam IDs within the team are not allowed");
 
-  const team = await dbCreate(tournamentId, data);
+  // Resolve each player's canonical Steam persona name server-side
+  const verifiedPlayers = await Promise.all(
+    data.players.map(async (p) => ({
+      steamId: p.steamId,
+      nickname: await resolveNickname(p.steamId),
+    }))
+  );
+
+  const team = await dbCreate(tournamentId, { ...data, players: verifiedPlayers });
 
   // Auto-close registration when max teams reached
   const newCount = existingTeams.length + 1;

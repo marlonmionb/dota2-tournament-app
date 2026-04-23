@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { recordMatchResult } from "@/services/bracket-service";
+import { handleApiError } from "@/lib/api-error";
 
 export async function POST(
   request: Request,
@@ -17,9 +18,6 @@ export async function POST(
     const match = await recordMatchResult(id, session.user.id, body);
     return NextResponse.json(match);
   } catch (error) {
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }

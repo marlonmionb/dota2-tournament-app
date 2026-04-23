@@ -5,12 +5,17 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 
+if (process.env.NODE_ENV === "production" && process.env.ENABLE_DEV_LOGIN === "true") {
+  throw new Error("ENABLE_DEV_LOGIN must not be set in production");
+}
+
 /**
  * Dev-only credentials provider — lets you log in with any email locally
  * without setting up OAuth. Never enabled in production.
  */
 const devCredentialsProvider =
-  process.env.NODE_ENV === "development"
+  process.env.NODE_ENV === "development" &&
+  process.env.ENABLE_DEV_LOGIN === "true"
     ? Credentials({
         name: "Dev Login",
         credentials: {

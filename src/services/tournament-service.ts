@@ -3,6 +3,7 @@ import {
   createTournament as dbCreate,
   findAllTournaments,
   findTournamentById,
+  findTournamentByIdPublic,
   updateTournamentStatus,
   updateTournament as dbUpdate,
   deleteTournamentById,
@@ -16,6 +17,12 @@ export async function getTournaments() {
 
 export async function getTournamentById(id: string) {
   const tournament = await findTournamentById(id);
+  if (!tournament) throw new Error("Tournament not found");
+  return tournament;
+}
+
+export async function getTournamentByIdPublic(id: string) {
+  const tournament = await findTournamentByIdPublic(id);
   if (!tournament) throw new Error("Tournament not found");
   return tournament;
 }

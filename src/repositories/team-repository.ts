@@ -8,6 +8,17 @@ export async function findTeamsByTournament(tournamentId: string) {
   });
 }
 
+export async function findTeamsByTournamentPublic(tournamentId: string) {
+  return prisma.team.findMany({
+    where: { tournamentId },
+    include: {
+      players: {
+        select: { id: true, nickname: true },
+      },
+    },
+  });
+}
+
 export async function findTeamById(id: string) {
   return prisma.team.findUnique({
     where: { id },

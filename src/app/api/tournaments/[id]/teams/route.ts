@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { registerTeam, getTeams } from "@/services/team-service";
+import { registerTeam } from "@/services/team-service";
+import { findTeamsByTournamentPublic } from "@/repositories/team-repository";
+import { handleApiError } from "@/lib/api-error";
 
 export async function GET(
   _request: Request,
@@ -8,7 +10,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const teams = await getTeams(id);
+    const teams = await findTeamsByTournamentPublic(id);
     return NextResponse.json(teams);
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -30,9 +32,6 @@ export async function POST(
     const team = await registerTeam(id, body);
     return NextResponse.json(team, { status: 201 });
   } catch (error) {
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }

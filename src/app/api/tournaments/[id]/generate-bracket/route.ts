@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { generateBracket } from "@/services/bracket-service";
+import { handleApiError } from "@/lib/api-error";
 
 export async function POST(
   _request: Request,
@@ -16,9 +17,6 @@ export async function POST(
     const matches = await generateBracket(id, session.user.id);
     return NextResponse.json(matches, { status: 201 });
   } catch (error) {
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }
