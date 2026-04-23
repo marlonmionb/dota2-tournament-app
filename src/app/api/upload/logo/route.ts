@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { supabaseAdmin } from "@/utils/supabase/admin";
+import { fileTypeFromBuffer } from "file-type";
 
 const BUCKET = "team-logos";
 const MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+const ALLOWED_MIME_EXTENSIONS: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -19,13 +25,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return NextResponse.json(
-      { error: "Only JPEG, PNG, WebP, and GIF images are allowed" },
-      { status: 400 }
-    );
-  }
-
   if (file.size > MAX_SIZE_BYTES) {
     return NextResponse.json(
       { error: "File must be smaller than 2 MB" },
@@ -33,16 +32,25 @@ export async function POST(request: Request) {
     );
   }
 
-  const ext = file.name.split(".").pop() ?? "jpg";
+  const arrayBuffer = await file.arrayBuffer();
+  const buf = Buffer.from(arrayBuffer);
+  const detected = await fileTypeFromBuffer(buf);
+
+  if (!detected || !ALLOWED_MIME_EXTENSIONS[detected.mime]) {
+    return NextResponse.json(
+      { error: "Invalid image file. Only JPEG, PNG, and WebP are allowed" },
+      { status: 400 }
+    );
+  }
+
+  const ext = ALLOWED_MIME_EXTENSIONS[detected.mime];
   // Use userId + timestamp to avoid collisions; no user-controlled path segments
   const path = `${session.user.id}/${Date.now()}.${ext}`;
 
-  const arrayBuffer = await file.arrayBuffer();
-
   const { error } = await supabaseAdmin.storage
     .from(BUCKET)
-    .upload(path, arrayBuffer, {
-      contentType: file.type,
+    .upload(path, buf, {
+      contentType: detected.mime,
       upsert: false,
     });
 
