@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { CURRENCIES } from "@/lib/currencies";
+import { DOTA2_REGIONS } from "@/lib/regions";
 
 export default function NewTournamentForm() {
   const router = useRouter();
@@ -58,6 +59,7 @@ export default function NewTournamentForm() {
       entryFee: entryFeeRaw !== "" ? parseFloat(entryFeeRaw) : undefined,
       prizePool: (form.elements.namedItem("prizePool") as HTMLInputElement).value || undefined,
       currency: (form.elements.namedItem("currency") as HTMLSelectElement).value,
+      region: (form.elements.namedItem("region") as HTMLSelectElement).value,
     };
 
     try {
@@ -202,6 +204,24 @@ export default function NewTournamentForm() {
             placeholder="https://discord.gg/..."
             className="w-full border border-gray-700 bg-gray-900 text-gray-100 placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1" htmlFor="region">
+            Server / Region *
+          </label>
+          <select
+            id="region"
+            name="region"
+            defaultValue=""
+            required
+            className="w-full border border-gray-700 bg-gray-900 text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          >
+            <option value="" disabled>Select a region…</option>
+            {DOTA2_REGIONS.map((r) => (
+              <option key={r.code} value={r.code}>{r.label}</option>
+            ))}
+          </select>
         </div>
 
         <div>

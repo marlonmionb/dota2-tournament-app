@@ -37,6 +37,7 @@ export const createTournamentSchema = z.object({
   entryFee: z.coerce.number().min(0, "Entry fee cannot be negative").optional(),
   prizePool: z.string().max(200).optional(),
   currency: z.string().min(1).max(10).default("USD"),
+  region: z.string().min(1, "Region is required").max(20),
 });
 
 export const registerTeamSchema = z.object({
