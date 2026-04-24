@@ -86,6 +86,15 @@ export default function NewTournamentForm() {
 
   return (
     <div className="max-w-lg mx-auto p-8">
+      <div className="flex items-center gap-4 mb-8">
+        <button
+          type="button"
+          onClick={() => router.push("/tournaments")}
+          className="text-sm text-amber-500 hover:underline"
+        >
+          ← Back to Tournaments
+        </button>
+      </div>
       <h1 className="text-3xl font-bold mb-8">Create Tournament</h1>
 
       {error && (
@@ -116,7 +125,7 @@ export default function NewTournamentForm() {
             id="description"
             name="description"
             rows={3}
-            className="w-full border border-gray-700 bg-gray-900 text-gray-100 placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full border border-gray-700 bg-gray-900 text-gray-100 placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-y max-h-48"
           />
         </div>
 
