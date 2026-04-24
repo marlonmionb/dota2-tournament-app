@@ -18,7 +18,7 @@ const securityHeaders = [
       // React requires eval() in dev for stack-trace reconstruction; never in prod
       `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: https://stayqprxuhqimxtrgaoh.supabase.co https://steamcdn-a.akamaihd.net https://avatars.steamstatic.com https://avatars.akamai.steamstatic.com",
+      "img-src 'self' data: blob: https://stayqprxuhqimxtrgaoh.supabase.co https://steamcdn-a.akamaihd.net https://avatars.steamstatic.com https://avatars.akamai.steamstatic.com",
       "connect-src 'self' https://api.opendota.com",
       "frame-ancestors 'none'",
     ].join("; "),

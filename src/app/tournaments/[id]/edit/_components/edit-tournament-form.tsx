@@ -134,7 +134,8 @@ export default function EditTournamentForm({ tournament }: { tournament: Tournam
           <div className="flex items-start gap-4">
             <div className="w-24 h-24 rounded-lg border border-gray-700 bg-gray-900 overflow-hidden flex items-center justify-center shrink-0">
               {imagePreview ? (
-                <Image src={imagePreview} alt="Banner preview" width={96} height={96} className="object-cover w-full h-full" />
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={imagePreview} alt="Banner preview" className="object-cover w-full h-full" />
               ) : (
                 <span className="text-xs text-gray-500">No image</span>
               )}
