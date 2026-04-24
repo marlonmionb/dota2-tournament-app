@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV === "development";
+
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -13,7 +15,8 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      // React requires eval() in dev for stack-trace reconstruction; never in prod
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https://stayqprxuhqimxtrgaoh.supabase.co https://steamcdn-a.akamaihd.net https://avatars.steamstatic.com https://avatars.akamai.steamstatic.com",
       "connect-src 'self' https://api.opendota.com",

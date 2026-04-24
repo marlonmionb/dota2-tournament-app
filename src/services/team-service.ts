@@ -20,7 +20,8 @@ async function resolveNickname(steamId: string): Promise<string> {
 
 export async function registerTeam(
   tournamentId: string,
-  input: RegisterTeamInput
+  input: RegisterTeamInput,
+  registeredById: string | null = null
 ) {
   const data = registerTeamSchema.parse(input);
 
@@ -64,7 +65,7 @@ export async function registerTeam(
     }))
   );
 
-  const team = await dbCreate(tournamentId, { ...data, players: verifiedPlayers });
+  const team = await dbCreate(tournamentId, { ...data, players: verifiedPlayers }, registeredById);
 
   // Auto-close registration when max teams reached
   const newCount = existingTeams.length + 1;

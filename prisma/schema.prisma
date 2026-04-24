@@ -50,6 +50,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   tournaments   Tournament[]
+  registeredTeams Team[]     @relation("RegisteredTeams")
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
 
@@ -93,21 +94,24 @@ model Tournament {
 }
 
 model Team {
-  id             String     @id @default(uuid())
-  teamName       String     @map("team_name")
-  captainName    String     @map("captain_name")
-  logoUrl        String?    @map("logo_url")
-  tournamentId   String     @map("tournament_id")
-  tournament     Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  players        Player[]
-  matchesAsTeamA Match[]    @relation("TeamAMatches")
-  matchesAsTeamB Match[]    @relation("TeamBMatches")
-  wonMatches     Match[]    @relation("WinnerMatches")
-  createdAt      DateTime   @default(now()) @map("created_at")
-  updatedAt      DateTime   @updatedAt @map("updated_at")
+  id               String     @id @default(uuid())
+  teamName         String     @map("team_name")
+  captainName      String     @map("captain_name")
+  logoUrl          String?    @map("logo_url")
+  tournamentId     String     @map("tournament_id")
+  tournament       Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  registeredById   String?    @map("registered_by_id")
+  registeredBy     User?      @relation("RegisteredTeams", fields: [registeredById], references: [id], onDelete: SetNull)
+  players          Player[]
+  matchesAsTeamA   Match[]    @relation("TeamAMatches")
+  matchesAsTeamB   Match[]    @relation("TeamBMatches")
+  wonMatches       Match[]    @relation("WinnerMatches")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
 
   @@unique([teamName, tournamentId])
   @@index([tournamentId])
+  @@index([registeredById])
   @@map("teams")
 }
 

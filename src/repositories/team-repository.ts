@@ -28,7 +28,8 @@ export async function findTeamById(id: string) {
 
 export async function createTeam(
   tournamentId: string,
-  data: RegisterTeamInput
+  data: RegisterTeamInput,
+  registeredById: string | null = null
 ) {
   return prisma.team.create({
     data: {
@@ -36,6 +37,7 @@ export async function createTeam(
       captainName: data.captainName,
       logoUrl: data.logoUrl || null,
       tournamentId,
+      registeredById,
       players: { create: data.players },
     },
     include: { players: true },
