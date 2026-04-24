@@ -34,6 +34,7 @@ export const createTournamentSchema = z.object({
   format: z.nativeEnum(TournamentFormat).default(TournamentFormat.SINGLE_ELIMINATION),
   imageUrl: supabaseStorageUrl.optional().or(z.literal("")),
   discordUrl: httpsUrl.optional().or(z.literal("")),
+  streamUrl: httpsUrl.optional().or(z.literal("")),
   entryFee: z.coerce.number().min(0, "Entry fee cannot be negative").optional(),
   prizePool: z.string().max(200).optional(),
   currency: z.string().min(1).max(10).default("USD"),

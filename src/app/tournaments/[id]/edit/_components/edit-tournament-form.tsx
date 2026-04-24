@@ -62,6 +62,7 @@ export default function EditTournamentForm({ tournament }: { tournament: Tournam
       registrationDeadline: (form.elements.namedItem("registrationDeadline") as HTMLInputElement).value,
       imageUrl: imageUrl || undefined,
       discordUrl: (form.elements.namedItem("discordUrl") as HTMLInputElement).value || undefined,
+      streamUrl: (form.elements.namedItem("streamUrl") as HTMLInputElement).value || undefined,
       entryFee: entryFeeRaw !== "" ? parseFloat(entryFeeRaw) : undefined,
       prizePool: (form.elements.namedItem("prizePool") as HTMLInputElement).value || undefined,
       currency: (form.elements.namedItem("currency") as HTMLSelectElement).value,
@@ -215,6 +216,20 @@ export default function EditTournamentForm({ tournament }: { tournament: Tournam
             type="url"
             placeholder="https://discord.gg/..."
             defaultValue={tournament.discordUrl ?? ""}
+            className="w-full border border-gray-700 bg-gray-900 text-gray-100 placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1" htmlFor="streamUrl">
+            Stream URL
+          </label>
+          <input
+            id="streamUrl"
+            name="streamUrl"
+            type="url"
+            placeholder="https://twitch.tv/... or https://youtube.com/..."
+            defaultValue={tournament.streamUrl ?? ""}
             className="w-full border border-gray-700 bg-gray-900 text-gray-100 placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>

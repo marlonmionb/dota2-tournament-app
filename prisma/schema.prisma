@@ -79,6 +79,7 @@ model Tournament {
   status               TournamentStatus @default(DRAFT)
   imageUrl             String?          @map("image_url")
   discordUrl           String?          @map("discord_url")
+  streamUrl            String?          @map("stream_url")
   entryFee             Float?           @map("entry_fee")
   prizePool            String?          @map("prize_pool")
   currency             String           @default("USD") @map("currency")
