@@ -185,6 +185,7 @@ export default function NewTournamentForm() {
             name="registrationDeadline"
             type="datetime-local"
             required
+            style={{ colorScheme: 'dark' }}
             className="w-full border border-gray-700 bg-gray-900 text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
@@ -198,6 +199,7 @@ export default function NewTournamentForm() {
             name="startDate"
             type="datetime-local"
             required
+            style={{ colorScheme: 'dark' }}
             className="w-full border border-gray-700 bg-gray-900 text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
