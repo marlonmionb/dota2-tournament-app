@@ -60,6 +60,10 @@ export default function NewTournamentForm() {
       prizePool: (form.elements.namedItem("prizePool") as HTMLInputElement).value || undefined,
       currency: (form.elements.namedItem("currency") as HTMLSelectElement).value,
       region: (form.elements.namedItem("region") as HTMLSelectElement).value,
+      maxRankTier: (() => {
+        const v = (form.elements.namedItem("maxRankTier") as HTMLSelectElement).value;
+        return v ? parseInt(v, 10) : undefined;
+      })(),
     };
 
     try {
@@ -247,6 +251,29 @@ export default function NewTournamentForm() {
               <option key={r.code} value={r.code}>{r.label}</option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1" htmlFor="maxRankTier">
+            Maximum Rank Tier <span className="text-gray-400 font-normal">(optional)</span>
+          </label>
+          <select
+            id="maxRankTier"
+            name="maxRankTier"
+            defaultValue=""
+            className="w-full border border-gray-700 bg-gray-900 text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          >
+            <option value="">No rank restriction</option>
+            <option value="1">Herald</option>
+            <option value="2">Guardian</option>
+            <option value="3">Crusader</option>
+            <option value="4">Archon</option>
+            <option value="5">Legend</option>
+            <option value="6">Ancient</option>
+            <option value="7">Divine</option>
+            <option value="8">Immortal</option>
+          </select>
+          <p className="mt-1 text-xs text-gray-500">Players ranked above this tier will not be able to register.</p>
         </div>
 
         <div>

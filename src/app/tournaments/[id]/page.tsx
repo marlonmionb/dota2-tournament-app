@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { TournamentStatus } from "@prisma/client";
 import Link from "next/link";
 import Image from "next/image";
-import { Trophy, DollarSign, Radio } from "lucide-react";
+import { Trophy, DollarSign, Radio, ShieldAlert } from "lucide-react";
 import { Suspense } from "react";
 import { currencySymbol } from "@/lib/currencies";
 import { DOTA2_REGIONS } from "@/lib/regions";
@@ -14,6 +14,17 @@ import { DeleteTournamentAction } from "./_components/delete-tournament-action";
 import { BracketTree } from "./_components/bracket-tree";
 import { TeamCard } from "./_components/team-card";
 import type { MatchWithTeams, BracketRound, TeamWithPlayers } from "@/types";
+
+const RANK_TIER_LABELS: Record<number, string> = {
+  1: "Herald",
+  2: "Guardian",
+  3: "Crusader",
+  4: "Archon",
+  5: "Legend",
+  6: "Ancient",
+  7: "Divine",
+  8: "Immortal",
+};
 
 function groupMatchesByRound(matches: MatchWithTeams[]): BracketRound[] {
   const map = new Map<number, MatchWithTeams[]>();
@@ -106,6 +117,12 @@ export default async function TournamentPage({
               <> · {DOTA2_REGIONS.find((r) => r.code === tournament.region)?.label ?? tournament.region}</>
             )}
           </span>
+          {tournament.maxRankTier != null && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-rose-800 bg-rose-950 px-2.5 py-0.5 text-xs font-semibold text-rose-400">
+              <ShieldAlert className="w-3 h-3" />
+              Max rank: {RANK_TIER_LABELS[tournament.maxRankTier] ?? tournament.maxRankTier}
+            </span>
+          )}
         </div>
         {tournament.description && (
           <p className="text-gray-400 mt-2 text-sm">{tournament.description}</p>

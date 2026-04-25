@@ -39,6 +39,7 @@ export const createTournamentSchema = z.object({
   prizePool: z.string().max(200).optional(),
   currency: z.string().min(1).max(10).default("USD"),
   region: z.string().min(1, "Region is required").max(20),
+  maxRankTier: z.coerce.number().int().min(1).max(8).optional(),
 });
 
 export const registerTeamSchema = z.object({

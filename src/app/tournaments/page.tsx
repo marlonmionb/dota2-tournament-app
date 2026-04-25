@@ -2,8 +2,19 @@ import { getTournaments } from "@/services/tournament-service";
 import Link from "next/link";
 import Image from "next/image";
 import { TournamentStatus } from "@prisma/client";
-import { Trophy } from "lucide-react";
+import { Trophy, ShieldAlert } from "lucide-react";
 import { currencySymbol } from "@/lib/currencies";
+
+const RANK_TIER_LABELS: Record<number, string> = {
+  1: "Herald",
+  2: "Guardian",
+  3: "Crusader",
+  4: "Archon",
+  5: "Legend",
+  6: "Ancient",
+  7: "Divine",
+  8: "Immortal",
+};
 
 const statusLabels: Record<TournamentStatus, string> = {
   DRAFT: "Draft",
@@ -96,6 +107,12 @@ export default async function TournamentsPage() {
                         <span className="flex items-center gap-1 text-yellow-400 font-medium">
                           <Trophy className="w-3.5 h-3.5" />
                           {currencySymbol(t.currency)}{t.prizePool}
+                        </span>
+                      )}
+                      {t.maxRankTier != null && (
+                        <span className="flex items-center gap-1 text-rose-400 font-medium">
+                          <ShieldAlert className="w-3.5 h-3.5" />
+                          Max: {RANK_TIER_LABELS[t.maxRankTier] ?? t.maxRankTier}
                         </span>
                       )}
                     </div>

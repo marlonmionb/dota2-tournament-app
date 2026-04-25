@@ -84,6 +84,7 @@ model Tournament {
   prizePool            String?          @map("prize_pool")
   currency             String           @default("USD") @map("currency")
   region               String?          @map("region")
+  maxRankTier          Int?             @map("max_rank_tier")
   organizerId          String           @map("organizer_id")
   organizer            User             @relation(fields: [organizerId], references: [id])
   teams                Team[]

@@ -29,7 +29,7 @@ const EMPTY_PLAYER = (): PlayerState => ({
   error: null,
 });
 
-export default function RegisterTeamForm({ tournamentId }: { tournamentId: string }) {
+export default function RegisterTeamForm({ tournamentId, maxRankTier }: { tournamentId: string; maxRankTier: number | null }) {
   const router = useRouter();
 
   const [formError, setFormError] = useState<string | null>(null);
@@ -92,6 +92,23 @@ export default function RegisterTeamForm({ tournamentId }: { tournamentId: strin
     if (!allResolved) {
       setFormError("All 5 players must have a valid Steam profile loaded.");
       return;
+    }
+
+    if (maxRankTier != null) {
+      const violatingPlayer = players.find((p) => {
+        const tier = p.profile?.rank_tier;
+        if (!tier) return false;
+        return Math.floor(tier / 10) > maxRankTier;
+      });
+      if (violatingPlayer) {
+        const playerIndex = players.indexOf(violatingPlayer) + 1;
+        const maxLabel = rankTierToLabel(maxRankTier * 10);
+        const playerRankLabel = rankTierToLabel(violatingPlayer.profile!.rank_tier);
+        setFormError(
+          `Player ${playerIndex} (${violatingPlayer.nickname}) is ranked ${playerRankLabel}, which exceeds the maximum allowed rank of ${maxLabel} for this tournament.`
+        );
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -224,6 +241,7 @@ export default function RegisterTeamForm({ tournamentId }: { tournamentId: strin
                 index={i}
                 isCaptain={i === 0}
                 player={player}
+                maxRankTier={maxRankTier}
                 onSteamInputChange={handleSteamInputChange}
                 onNicknameChange={(val) => patchPlayer(i, { nickname: val })}
               />
@@ -257,11 +275,17 @@ type PlayerCardProps = {
   index: number;
   isCaptain: boolean;
   player: PlayerState;
+  maxRankTier: number | null;
   onSteamInputChange: (index: number, value: string) => void;
   onNicknameChange: (value: string) => void;
 };
 
-function PlayerCard({ index, isCaptain, player, onSteamInputChange, onNicknameChange }: PlayerCardProps) {
+function PlayerCard({ index, isCaptain, player, maxRankTier, onSteamInputChange, onNicknameChange }: PlayerCardProps) {
+  const rankExceeded =
+    maxRankTier != null &&
+    player.profile != null &&
+    player.profile.rank_tier > 0 &&
+    Math.floor(player.profile.rank_tier / 10) > maxRankTier;
   return (
     <div className={`border rounded-lg p-4 space-y-3 ${isCaptain ? "border-amber-700 bg-amber-950/30" : "border-gray-700"}`}>
       <div className="flex items-center gap-2">
@@ -303,7 +327,7 @@ function PlayerCard({ index, isCaptain, player, onSteamInputChange, onNicknameCh
 
       {/* Profile preview */}
       {player.profile && (
-        <div className="flex items-center gap-3 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2">
+        <div className={`flex items-center gap-3 rounded-lg border px-3 py-2 ${rankExceeded ? "bg-red-950/40 border-red-700" : "bg-gray-800 border-gray-700"}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={player.profile.profile.avatarmedium}
@@ -315,6 +339,11 @@ function PlayerCard({ index, isCaptain, player, onSteamInputChange, onNicknameCh
             <p className={`text-xs font-medium ${rankTierColor(player.profile.rank_tier)}`}>
               {rankTierToLabel(player.profile.rank_tier)}
             </p>
+            {rankExceeded && (
+              <p className="text-xs text-red-400 font-medium mt-0.5">
+                ⚠ Rank exceeds tournament maximum ({rankTierToLabel(maxRankTier! * 10)})
+              </p>
+            )}
           </div>
         </div>
       )}
