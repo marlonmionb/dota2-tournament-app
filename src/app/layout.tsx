@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dota 2 Tournament Platform",
+  title: "Draft Arena",
   description: "Organize and manage amateur Dota 2 tournaments",
 };
 
