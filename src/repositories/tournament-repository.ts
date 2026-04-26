@@ -1,6 +1,13 @@
 import { prisma } from "@/lib/prisma";
-import { TournamentStatus } from "@prisma/client";
+import { Prisma, TournamentStatus } from "@prisma/client";
 import type { CreateTournamentInput, UpdateTournamentInput } from "@/lib/validations";
+
+export interface TournamentFilters {
+  status?: TournamentStatus;
+  region?: string;
+  entry?: "free" | "paid";
+  maxRank?: number;
+}
 
 export async function findAllTournaments() {
   return prisma.tournament.findMany({
@@ -10,6 +17,36 @@ export async function findAllTournaments() {
       _count: { select: { teams: true } },
     },
   });
+}
+
+export async function findAllTournamentsPaginated(
+  page: number,
+  pageSize: number,
+  filters: TournamentFilters = {}
+) {
+  const skip = (page - 1) * pageSize;
+
+  const where: Prisma.TournamentWhereInput = {};
+  if (filters.status) where.status = filters.status;
+  if (filters.region) where.region = filters.region;
+  if (filters.entry === "free") where.OR = [{ entryFee: null }, { entryFee: 0 }];
+  if (filters.entry === "paid") where.entryFee = { gt: 0 };
+  if (filters.maxRank != null) where.maxRankTier = filters.maxRank;
+
+  const [tournaments, total] = await Promise.all([
+    prisma.tournament.findMany({
+      skip,
+      take: pageSize,
+      where,
+      orderBy: { createdAt: "desc" },
+      include: {
+        organizer: { select: { id: true, name: true, image: true } },
+        _count: { select: { teams: true } },
+      },
+    }),
+    prisma.tournament.count({ where }),
+  ]);
+  return { tournaments, total };
 }
 
 export async function findTournamentById(id: string) {

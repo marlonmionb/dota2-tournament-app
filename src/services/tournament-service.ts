@@ -2,11 +2,13 @@ import { TournamentStatus } from "@prisma/client";
 import {
   createTournament as dbCreate,
   findAllTournaments,
+  findAllTournamentsPaginated,
   findTournamentById,
   findTournamentByIdPublic,
   updateTournamentStatus,
   updateTournament as dbUpdate,
   deleteTournamentById,
+  type TournamentFilters,
 } from "@/repositories/tournament-repository";
 import { findTeamsByTournament } from "@/repositories/team-repository";
 import { createTournamentSchema, updateTournamentSchema, type CreateTournamentInput } from "@/lib/validations";
@@ -17,6 +19,10 @@ const TOURNAMENT_IMAGES_BUCKET = "tournament-images";
 
 export async function getTournaments() {
   return findAllTournaments();
+}
+
+export async function getTournamentsPaginated(page: number, pageSize: number, filters: TournamentFilters = {}) {
+  return findAllTournamentsPaginated(page, pageSize, filters);
 }
 
 export async function getTournamentById(id: string) {

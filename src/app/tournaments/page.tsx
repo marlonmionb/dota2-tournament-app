@@ -1,9 +1,11 @@
-import { getTournaments } from "@/services/tournament-service";
+import { Suspense } from "react";
+import { getTournamentsPaginated } from "@/services/tournament-service";
 import Link from "next/link";
 import Image from "next/image";
 import { TournamentStatus } from "@prisma/client";
-import { Trophy, ShieldAlert } from "lucide-react";
+import { Trophy, ShieldAlert, ChevronLeft, ChevronRight } from "lucide-react";
 import { currencySymbol } from "@/lib/currencies";
+import { TournamentFilterBar } from "./_components/tournament-filter-bar";
 
 const RANK_TIER_LABELS: Record<number, string> = {
   1: "Herald",
@@ -32,8 +34,49 @@ const statusColors: Record<TournamentStatus, string> = {
   COMPLETED: "bg-slate-800 text-slate-400",
 };
 
-export default async function TournamentsPage() {
-  const tournaments = await getTournaments();
+const PAGE_SIZE = 10;
+
+export default async function TournamentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const { page: pageParam, status: statusParam, region: regionParam, entry: entryParam, maxRank: maxRankParam } = await searchParams;
+
+  const page = Math.max(1, parseInt((Array.isArray(pageParam) ? pageParam[0] : pageParam) ?? "1", 10) || 1);
+
+  // Parse and validate filter params
+  const rawStatus = Array.isArray(statusParam) ? statusParam[0] : statusParam;
+  const status = rawStatus && (Object.values(TournamentStatus) as string[]).includes(rawStatus)
+    ? rawStatus as TournamentStatus
+    : undefined;
+
+  const region = (Array.isArray(regionParam) ? regionParam[0] : regionParam) || undefined;
+
+  const rawEntry = Array.isArray(entryParam) ? entryParam[0] : entryParam;
+  const entry = rawEntry === "free" || rawEntry === "paid" ? rawEntry : undefined;
+
+  const rawMaxRank = Array.isArray(maxRankParam) ? maxRankParam[0] : maxRankParam;
+  const parsedMaxRank = rawMaxRank ? parseInt(rawMaxRank, 10) : NaN;
+  const maxRank = !isNaN(parsedMaxRank) && parsedMaxRank >= 1 && parsedMaxRank <= 8 ? parsedMaxRank : undefined;
+
+  const { tournaments, total } = await getTournamentsPaginated(page, PAGE_SIZE, { status, region, entry, maxRank });
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  // Build paginated URLs that preserve the active filters
+  const filterEntries: Record<string, string> = {};
+  if (status) filterEntries.status = status;
+  if (region) filterEntries.region = region;
+  if (entry) filterEntries.entry = entry;
+  if (maxRank != null) filterEntries.maxRank = String(maxRank);
+
+  function pageUrl(p: number) {
+    const params = new URLSearchParams(filterEntries);
+    params.set("page", String(p));
+    return `/tournaments?${params.toString()}`;
+  }
+
+  const hasFilters = !!(status || region || entry || maxRank);
 
   return (
     <div className="max-w-4xl mx-auto p-8">
@@ -47,9 +90,13 @@ export default async function TournamentsPage() {
         </Link>
       </div>
 
+      <Suspense fallback={null}>
+        <TournamentFilterBar />
+      </Suspense>
+
       {tournaments.length === 0 ? (
         <p className="text-gray-500 text-center py-16">
-          No tournaments yet. Be the first to create one!
+          {hasFilters ? "No tournaments match your filters." : "No tournaments yet. Be the first to create one!"}
         </p>
       ) : (
         <ul className="space-y-4">
@@ -106,7 +153,7 @@ export default async function TournamentsPage() {
                       {t.prizePool && (
                         <span className="flex items-center gap-1 text-yellow-400 font-medium">
                           <Trophy className="w-3.5 h-3.5" />
-                          {currencySymbol(t.currency)}{t.prizePool}
+                          {t.prizePool}
                         </span>
                       )}
                       {t.maxRankTier != null && (
@@ -136,6 +183,52 @@ export default async function TournamentsPage() {
             );
           })}
         </ul>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-8">
+          <Link
+            href={pageUrl(page - 1)}
+            aria-disabled={page <= 1}
+            className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              page <= 1
+                ? "pointer-events-none text-gray-600"
+                : "text-gray-300 hover:bg-gray-800"
+            }`}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Prev
+          </Link>
+
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <Link
+                key={p}
+                href={pageUrl(p)}
+                className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+                  p === page
+                    ? "bg-amber-500 text-gray-950"
+                    : "text-gray-300 hover:bg-gray-800"
+                }`}
+              >
+                {p}
+              </Link>
+            ))}
+          </div>
+
+          <Link
+            href={pageUrl(page + 1)}
+            aria-disabled={page >= totalPages}
+            className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              page >= totalPages
+                ? "pointer-events-none text-gray-600"
+                : "text-gray-300 hover:bg-gray-800"
+            }`}
+          >
+            Next
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
       )}
     </div>
   );
