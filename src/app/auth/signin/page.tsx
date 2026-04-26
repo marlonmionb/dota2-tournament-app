@@ -25,17 +25,27 @@ function SignInPageContent() {
       redirect: false,
     });
 
-    if (result?.error) {
-      const code = result.error;
+    if (!result) {
+      setError("Sign-in did not complete. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    if (result.error || !result.ok) {
+      const code = result.error ?? "unknown_error";
       if (code.includes("database_unavailable")) {
         setError(
           "Cannot reach the database. Make sure Docker is running: docker compose up -d"
+        );
+      } else if (code.toLowerCase().includes("configuration")) {
+        setError(
+          "Dev login is not enabled. Set ENABLE_DEV_LOGIN=true (or remove ENABLE_DEV_LOGIN=false) and restart the dev server."
         );
       } else {
         setError(`Sign-in failed (${code}). Check the server logs for details.`);
       }
       setLoading(false);
-    } else if (result?.url) {
+    } else if (result.url) {
       window.location.href = result.url;
     } else {
       // NextAuth v5 may not return a url — navigate to callbackUrl directly

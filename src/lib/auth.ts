@@ -9,13 +9,15 @@ if (process.env.NODE_ENV === "production" && process.env.ENABLE_DEV_LOGIN === "t
   throw new Error("ENABLE_DEV_LOGIN must not be set in production");
 }
 
+const isDevLoginEnabled =
+  process.env.NODE_ENV === "development" && process.env.ENABLE_DEV_LOGIN !== "false";
+
 /**
  * Dev-only credentials provider — lets you log in with any email locally
  * without setting up OAuth. Never enabled in production.
  */
 const devCredentialsProvider =
-  process.env.NODE_ENV === "development" &&
-  process.env.ENABLE_DEV_LOGIN === "true"
+  isDevLoginEnabled
     ? Credentials({
         name: "Dev Login",
         credentials: {

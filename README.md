@@ -32,6 +32,7 @@ cp .env.example .env
 |---|---|
 | `DATABASE_URL` | PostgreSQL connection string |
 | `AUTH_SECRET` | Random secret (`openssl rand -base64 32`) |
+| `ENABLE_DEV_LOGIN` | Optional in development (`true` by default, set `false` to disable) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials |
 | `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | Discord OAuth credentials |
 
