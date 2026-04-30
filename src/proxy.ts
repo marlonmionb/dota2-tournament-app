@@ -8,8 +8,8 @@ const ratelimit = new Ratelimit({
   limiter: Ratelimit.slidingWindow(20, "1 m"),
 });
 
-export async function middleware(req: NextRequest, event: NextFetchEvent) {
-  const logger = new Logger({ source: "middleware" });
+export async function proxy(req: NextRequest, event: NextFetchEvent) {
+  const logger = new Logger({ source: "proxy" });
   logger.middleware(req);
 
   const ip = req.headers.get("x-forwarded-for") ?? "unknown";
