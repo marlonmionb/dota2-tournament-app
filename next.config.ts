@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withAxiom } from "next-axiom";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -19,7 +20,7 @@ const securityHeaders = [
       `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://stayqprxuhqimxtrgaoh.supabase.co https://steamcdn-a.akamaihd.net https://avatars.steamstatic.com https://avatars.akamai.steamstatic.com",
-      "connect-src 'self' https://api.opendota.com",
+      "connect-src 'self' https://api.opendota.com https://api.axiom.co",
       "frame-ancestors 'none'",
     ].join("; "),
   },
@@ -40,4 +41,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withAxiom(nextConfig);
