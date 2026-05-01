@@ -1,8 +1,10 @@
 import { TournamentStatus } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 import {
   createTournament as dbCreate,
   findAllTournaments,
   findAllTournamentsPaginated,
+  findHomepageTournaments,
   findTournamentById,
   findTournamentByIdPublic,
   updateTournamentStatus,
@@ -19,6 +21,16 @@ const TOURNAMENT_IMAGES_BUCKET = "tournament-images";
 
 export async function getTournaments() {
   return findAllTournaments();
+}
+
+const getCachedHomepageTournaments = unstable_cache(
+  findHomepageTournaments,
+  ["homepage-tournaments"],
+  { revalidate: 60 }
+);
+
+export async function getHomepageTournaments() {
+  return getCachedHomepageTournaments();
 }
 
 export async function getTournamentsPaginated(page: number, pageSize: number, filters: TournamentFilters = {}) {

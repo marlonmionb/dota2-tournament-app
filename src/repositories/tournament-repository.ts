@@ -19,6 +19,23 @@ export async function findAllTournaments() {
   });
 }
 
+export async function findHomepageTournaments() {
+  return Promise.all([
+    prisma.tournament.findMany({
+      where: { status: { in: [TournamentStatus.REGISTRATION_OPEN, TournamentStatus.IN_PROGRESS] } },
+      orderBy: { createdAt: "desc" },
+      take: 3,
+      include: { _count: { select: { teams: true } } },
+    }),
+    prisma.tournament.findMany({
+      where: { status: TournamentStatus.COMPLETED },
+      orderBy: { updatedAt: "desc" },
+      take: 3,
+      include: { _count: { select: { teams: true } } },
+    }),
+  ]);
+}
+
 export async function findAllTournamentsPaginated(
   page: number,
   pageSize: number,

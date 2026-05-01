@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import {
   steamIdToAccountId,
   fetchPlayerProfile,
@@ -11,18 +12,22 @@ type Props = {
   team: TeamWithPlayers;
 };
 
-async function fetchPlayerSafe(steamId: string): Promise<OpenDotaPlayer | null> {
-  try {
-    const accountId = steamIdToAccountId(steamId);
-    return await fetchPlayerProfile(accountId);
-  } catch {
-    return null;
-  }
-}
+const getCachedPlayerProfile = unstable_cache(
+  async (steamId: string): Promise<OpenDotaPlayer | null> => {
+    try {
+      const accountId = steamIdToAccountId(steamId);
+      return await fetchPlayerProfile(accountId);
+    } catch {
+      return null;
+    }
+  },
+  ["opendota-player"],
+  { revalidate: 3600 }
+);
 
 export async function TeamCard({ team }: Props) {
   const profiles = await Promise.all(
-    team.players.map((p) => fetchPlayerSafe(p.steamId))
+    team.players.map((p) => getCachedPlayerProfile(p.steamId))
   );
 
   return (

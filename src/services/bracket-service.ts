@@ -1,15 +1,14 @@
 import { MatchSlot, TournamentStatus } from "@prisma/client";
-import { findTournamentById, updateTournamentStatus } from "@/repositories/tournament-repository";
+import { findTournamentById } from "@/repositories/tournament-repository";
 import { findTeamsByTournament } from "@/repositories/team-repository";
 import {
   assignTeamToMatchSlot,
-  createMatch,
   findMatchById,
   findMatchesByTournament,
-  linkMatchToNext,
   updateMatchWinner,
 } from "@/repositories/match-repository";
 import { matchResultSchema } from "@/lib/validations";
+import { prisma } from "@/lib/prisma";
 
 /**
  * Generates a single-elimination bracket by randomly seeding registered teams.
@@ -34,54 +33,61 @@ export async function generateBracket(tournamentId: string, organizerId: string)
   const shuffled = [...teams].sort(() => Math.random() - 0.5);
   const rounds = Math.ceil(Math.log2(shuffled.length));
 
-  const matchesByRound: string[][] = [];
+  await prisma.$transaction(async (tx) => {
+    const matchesByRound: string[][] = [];
 
-  // Round 1: seeded team pairs from the shuffle.
-  const firstRoundIds: string[] = [];
-  for (let i = 0; i < shuffled.length; i += 2) {
-    const match = await createMatch({
-      tournamentId,
-      round: 1,
-      teamAId: shuffled[i].id,
-      teamBId: shuffled[i + 1].id,
-    });
-    firstRoundIds.push(match.id);
-  }
-  matchesByRound.push(firstRoundIds);
-
-  // Later rounds start as TBD slots and get filled as winners advance.
-  for (let round = 2; round <= rounds; round += 1) {
-    const previousRoundMatchCount = matchesByRound[round - 2].length;
-    const thisRoundMatchCount = Math.floor(previousRoundMatchCount / 2);
-    const thisRoundIds: string[] = [];
-
-    for (let i = 0; i < thisRoundMatchCount; i += 1) {
-      const match = await createMatch({
-        tournamentId,
-        round,
-        teamAId: null,
-        teamBId: null,
+    // Round 1: seeded team pairs from the shuffle.
+    const firstRoundIds: string[] = [];
+    for (let i = 0; i < shuffled.length; i += 2) {
+      const match = await tx.match.create({
+        data: {
+          tournamentId,
+          round: 1,
+          teamAId: shuffled[i].id,
+          teamBId: shuffled[i + 1].id,
+        },
       });
-      thisRoundIds.push(match.id);
+      firstRoundIds.push(match.id);
+    }
+    matchesByRound.push(firstRoundIds);
+
+    // Later rounds start as TBD slots and get filled as winners advance.
+    for (let round = 2; round <= rounds; round += 1) {
+      const previousRoundMatchCount = matchesByRound[round - 2].length;
+      const thisRoundMatchCount = Math.floor(previousRoundMatchCount / 2);
+      const thisRoundIds: string[] = [];
+
+      for (let i = 0; i < thisRoundMatchCount; i += 1) {
+        const match = await tx.match.create({
+          data: { tournamentId, round, teamAId: null, teamBId: null },
+        });
+        thisRoundIds.push(match.id);
+      }
+
+      matchesByRound.push(thisRoundIds);
     }
 
-    matchesByRound.push(thisRoundIds);
-  }
+    // Connect every match to its next match and winner slot, forming a full tree.
+    for (let roundIndex = 0; roundIndex < matchesByRound.length - 1; roundIndex += 1) {
+      const currentRound = matchesByRound[roundIndex];
+      const nextRound = matchesByRound[roundIndex + 1];
 
-  // Connect every match to its next match and winner slot, forming a full tree.
-  for (let roundIndex = 0; roundIndex < matchesByRound.length - 1; roundIndex += 1) {
-    const currentRound = matchesByRound[roundIndex];
-    const nextRound = matchesByRound[roundIndex + 1];
-
-    for (let i = 0; i < currentRound.length; i += 1) {
-      const nextIndex = Math.floor(i / 2);
-      const nextMatchId = nextRound[nextIndex];
-      const slot = i % 2 === 0 ? MatchSlot.TEAM_A : MatchSlot.TEAM_B;
-      await linkMatchToNext(currentRound[i], nextMatchId, slot);
+      for (let i = 0; i < currentRound.length; i += 1) {
+        const nextIndex = Math.floor(i / 2);
+        const nextMatchId = nextRound[nextIndex];
+        const slot = i % 2 === 0 ? MatchSlot.TEAM_A : MatchSlot.TEAM_B;
+        await tx.match.update({
+          where: { id: currentRound[i] },
+          data: { nextMatchId, nextMatchSlot: slot },
+        });
+      }
     }
-  }
 
-  await updateTournamentStatus(tournamentId, TournamentStatus.IN_PROGRESS);
+    await tx.tournament.update({
+      where: { id: tournamentId },
+      data: { status: TournamentStatus.IN_PROGRESS },
+    });
+  });
 
   return findMatchesByTournament(tournamentId);
 }

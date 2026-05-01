@@ -1,9 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Plus, Users, Swords, Trophy, ShieldAlert } from "lucide-react";
-import { prisma } from "@/lib/prisma";
 import { TournamentStatus } from "@prisma/client";
 import { currencySymbol } from "@/lib/currencies";
+import { getHomepageTournaments } from "@/services/tournament-service";
 
 const statusLabels: Record<TournamentStatus, string> = {
   DRAFT: "Draft",
@@ -22,20 +22,7 @@ const statusColors: Record<TournamentStatus, string> = {
 };
 
 export default async function Home() {
-  const [featuredTournaments, recentlyCompleted] = await Promise.all([
-    prisma.tournament.findMany({
-      where: { status: { in: ["REGISTRATION_OPEN", "IN_PROGRESS"] } },
-      orderBy: { createdAt: "desc" },
-      take: 3,
-      include: { _count: { select: { teams: true } } },
-    }),
-    prisma.tournament.findMany({
-      where: { status: "COMPLETED" },
-      orderBy: { updatedAt: "desc" },
-      take: 3,
-      include: { _count: { select: { teams: true } } },
-    }),
-  ]);
+  const [featuredTournaments, recentlyCompleted] = await getHomepageTournaments();
 
   return (
     <>
