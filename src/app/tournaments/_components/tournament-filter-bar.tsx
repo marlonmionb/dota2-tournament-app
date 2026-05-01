@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { TournamentStatus } from "@prisma/client";
 import { DOTA2_REGIONS } from "@/lib/regions";
-import { X } from "lucide-react";
+import { Search, X } from "lucide-react";
 
 const RANK_TIER_LABELS: Record<number, string> = {
   1: "Herald",
@@ -32,8 +33,32 @@ export function TournamentFilterBar() {
   const currentRegion = searchParams.get("region") ?? "";
   const currentEntry = searchParams.get("entry") ?? "";
   const currentMaxRank = searchParams.get("maxRank") ?? "";
+  const currentSearch = searchParams.get("search") ?? "";
 
-  const hasFilters = !!(currentStatus || currentRegion || currentEntry || currentMaxRank);
+  const [searchInput, setSearchInput] = useState(currentSearch);
+
+  // Sync local input if the URL search param changes externally (e.g. clear filters)
+  useEffect(() => {
+    setSearchInput(currentSearch);
+  }, [currentSearch]);
+
+  // Debounce: push search param 400ms after the user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (searchInput.trim()) {
+        params.set("search", searchInput.trim());
+      } else {
+        params.delete("search");
+      }
+      params.delete("page");
+      router.push(`/tournaments?${params.toString()}`);
+    }, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
+
+  const hasFilters = !!(currentStatus || currentRegion || currentEntry || currentMaxRank || currentSearch);
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -52,6 +77,27 @@ export function TournamentFilterBar() {
 
   return (
     <div className="mb-6 space-y-3">
+      {/* Search by name */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+        <input
+          type="text"
+          placeholder="Search tournaments…"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="w-full bg-gray-800 text-gray-200 text-sm rounded-lg pl-9 pr-9 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 placeholder:text-gray-500"
+        />
+        {searchInput && (
+          <button
+            onClick={() => setSearchInput("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+            aria-label="Clear search"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
       {/* Row 1: Status pills */}
       <div className="flex flex-wrap gap-1.5">
         {STATUS_OPTIONS.map(({ value, label }) => (

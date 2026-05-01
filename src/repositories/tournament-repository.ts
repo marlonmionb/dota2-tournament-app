@@ -7,6 +7,7 @@ export interface TournamentFilters {
   region?: string;
   entry?: "free" | "paid";
   maxRank?: number;
+  search?: string;
 }
 
 export async function findAllTournaments() {
@@ -49,6 +50,7 @@ export async function findAllTournamentsPaginated(
   if (filters.entry === "free") where.OR = [{ entryFee: null }, { entryFee: 0 }];
   if (filters.entry === "paid") where.entryFee = { gt: 0 };
   if (filters.maxRank != null) where.maxRankTier = filters.maxRank;
+  if (filters.search) where.name = { contains: filters.search, mode: "insensitive" };
 
   const [tournaments, total] = await Promise.all([
     prisma.tournament.findMany({

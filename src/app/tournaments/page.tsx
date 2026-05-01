@@ -27,7 +27,7 @@ export default async function TournamentsPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { page: pageParam, status: statusParam, region: regionParam, entry: entryParam, maxRank: maxRankParam } = await searchParams;
+  const { page: pageParam, status: statusParam, region: regionParam, entry: entryParam, maxRank: maxRankParam, search: searchParam } = await searchParams;
 
   const page = Math.max(1, parseInt((Array.isArray(pageParam) ? pageParam[0] : pageParam) ?? "1", 10) || 1);
 
@@ -46,7 +46,9 @@ export default async function TournamentsPage({
   const parsedMaxRank = rawMaxRank ? parseInt(rawMaxRank, 10) : NaN;
   const maxRank = !isNaN(parsedMaxRank) && parsedMaxRank >= 1 && parsedMaxRank <= 8 ? parsedMaxRank : undefined;
 
-  const { tournaments, total } = await getTournamentsPaginated(page, PAGE_SIZE, { status, region, entry, maxRank });
+  const search = (Array.isArray(searchParam) ? searchParam[0] : searchParam) || undefined;
+
+  const { tournaments, total } = await getTournamentsPaginated(page, PAGE_SIZE, { status, region, entry, maxRank, search });
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   // Build paginated URLs that preserve the active filters
@@ -55,6 +57,7 @@ export default async function TournamentsPage({
   if (region) filterEntries.region = region;
   if (entry) filterEntries.entry = entry;
   if (maxRank != null) filterEntries.maxRank = String(maxRank);
+  if (search) filterEntries.search = search;
 
   function pageUrl(p: number) {
     const params = new URLSearchParams(filterEntries);
@@ -62,7 +65,7 @@ export default async function TournamentsPage({
     return `/tournaments?${params.toString()}`;
   }
 
-  const hasFilters = !!(status || region || entry || maxRank);
+  const hasFilters = !!(status || region || entry || maxRank || search);
 
   return (
     <div className="max-w-4xl mx-auto p-8">
