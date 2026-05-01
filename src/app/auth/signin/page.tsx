@@ -6,7 +6,12 @@ import { useSearchParams } from "next/navigation";
 
 function SignInPageContent() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/";
+  const rawCallbackUrl = searchParams.get("callbackUrl") ?? "/";
+  // Only allow same-origin relative paths to prevent open redirect attacks.
+  const callbackUrl =
+    rawCallbackUrl.startsWith("/") && !rawCallbackUrl.startsWith("//")
+      ? rawCallbackUrl
+      : "/";
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

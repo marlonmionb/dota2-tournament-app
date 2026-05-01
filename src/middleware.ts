@@ -32,7 +32,12 @@ export default auth(async (req) => {
 
   // Rate limit API routes
   if (pathname.startsWith("/api/")) {
-    const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+    // Prefer x-real-ip (set by Vercel's edge; clients cannot spoof it).
+    // Fall back to the leftmost entry in X-Forwarded-For (originating client).
+    // Never use the full header string as a key — it's comma-separated and client-controllable.
+    const realIp = req.headers.get("x-real-ip");
+    const forwarded = req.headers.get("x-forwarded-for");
+    const ip = realIp ?? (forwarded ? forwarded.split(",")[0].trim() : "unknown");
     const { success } = await ratelimit.limit(ip);
     if (!success) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });

@@ -50,7 +50,12 @@ export const registerTeamSchema = z.object({
     .array(
       z.object({
         nickname: z.string().min(1, "Nickname is required"),
-        steamId: z.string().min(1, "Steam ID is required"),
+        steamId: z
+          .string()
+          .min(1, "Steam ID is required")
+          .refine((v) => /^\d+$/.test(v.trim()) && BigInt(v.trim()) > 0n, {
+            message: "Steam ID must be a positive integer",
+          }),
       })
     )
     .length(5, "A team must have exactly 5 players"),

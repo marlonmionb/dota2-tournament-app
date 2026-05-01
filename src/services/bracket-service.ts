@@ -1,5 +1,5 @@
 import { MatchSlot, TournamentStatus } from "@prisma/client";
-import { findTournamentById } from "@/repositories/tournament-repository";
+import { findTournamentById, updateTournamentStatus } from "@/repositories/tournament-repository";
 import { findTeamsByTournament } from "@/repositories/team-repository";
 import {
   assignTeamToMatchSlot,
@@ -108,13 +108,15 @@ export async function recordMatchResult(
   if (match.tournament.organizerId !== organizerId) throw new Error("Forbidden");
   if (!canRecordResult(match.tournament))
     throw new Error("Tournament is not in progress");
-  if (match.status === "COMPLETED") throw new Error("Match already completed");
+  if (match.status === "COMPLETED") throw new Error("Match is already completed");
   if (!match.teamAId || !match.teamBId)
     throw new Error("Match is not ready. Both teams must be assigned first");
   if (match.teamAId !== winnerId && match.teamBId !== winnerId)
     throw new Error("Winner must be one of the two competing teams");
 
   const updated = await updateMatchWinner(matchId, winnerId);
+  // null means a concurrent request completed the match between our read and write
+  if (!updated) throw new Error("Match is already completed");
 
   // Advance winner to the linked next match slot, if this is not the final.
   if (match.nextMatchId) {

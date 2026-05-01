@@ -29,9 +29,18 @@ export async function linkMatchToNext(
 }
 
 export async function updateMatchWinner(matchId: string, winnerId: string) {
-  return prisma.match.update({
-    where: { id: matchId },
+  // Atomic conditional update: only writes if the match is not yet COMPLETED.
+  // This prevents a TOCTOU race where two concurrent requests both pass the
+  // pre-check and then overwrite each other's winner.
+  const result = await prisma.match.updateMany({
+    where: { id: matchId, status: { not: MatchStatus.COMPLETED } },
     data: { winnerId, status: MatchStatus.COMPLETED },
+  });
+
+  if (result.count === 0) return null; // already completed by a concurrent request
+
+  return prisma.match.findUnique({
+    where: { id: matchId },
     include: { teamA: true, teamB: true, winner: true },
   });
 }

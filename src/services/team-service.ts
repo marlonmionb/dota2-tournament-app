@@ -14,8 +14,10 @@ export async function getPublicTeams(tournamentId: string) {
 }
 
 async function resolveNickname(steamId: string): Promise<string> {
+  // Let format errors throw — the schema already validates before we get here.
+  // Only swallow network/API failures from OpenDota.
+  const accountId = parseSteamInput(steamId);
   try {
-    const accountId = parseSteamInput(steamId);
     const profile = await fetchPlayerProfile(accountId);
     return profile.profile.personaname;
   } catch {
@@ -45,6 +47,10 @@ export async function registerTeam(
     (t) => t.teamName.toLowerCase() === data.teamName.toLowerCase()
   );
   if (duplicate) throw new Error("A team with this name is already registered");
+
+  // One team per user per tournament
+  if (registeredById && existingTeams.some((t) => t.registeredById === registeredById))
+    throw new Error("You have already registered a team for this tournament");
 
   // Enforce unique Steam IDs across the tournament
   const existingSteamIds = existingTeams.flatMap((t) => t.players.map((p) => p.steamId));
