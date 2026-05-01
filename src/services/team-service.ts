@@ -3,9 +3,14 @@ import { findTournamentById, updateTournamentStatus } from "@/repositories/tourn
 import {
   createTeam as dbCreate,
   findTeamsByTournament,
+  findTeamsByTournamentPublic,
 } from "@/repositories/team-repository";
 import { registerTeamSchema, type RegisterTeamInput } from "@/lib/validations";
 import { parseSteamInput, fetchPlayerProfile } from "@/lib/steam";
+
+export async function getPublicTeams(tournamentId: string) {
+  return findTeamsByTournamentPublic(tournamentId);
+}
 
 async function resolveNickname(steamId: string): Promise<string> {
   try {

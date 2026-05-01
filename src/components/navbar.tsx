@@ -1,11 +1,10 @@
-"use client";
-
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
+import { auth } from "@/lib/auth";
+import { NavbarUserMenu } from "./navbar-user-menu";
 
-export default function Navbar() {
-  const { data: session, status } = useSession();
+export default async function Navbar() {
+  const session = await auth();
 
   return (
     <nav className="sticky top-0 z-50 border-b border-gray-800 bg-gray-950/90 backdrop-blur-sm px-6 py-3 flex items-center justify-between">
@@ -17,25 +16,7 @@ export default function Navbar() {
         <Link href="/tournaments" className="text-gray-400 hover:text-gray-100 transition-colors">
           Tournaments
         </Link>
-
-        {status === "loading" ? null : session ? (
-          <>
-            <span className="text-gray-400">{session.user?.name ?? session.user?.email}</span>
-            <button
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="rounded-lg border border-amber-700 px-3 py-1.5 font-medium text-amber-400 hover:border-amber-500 hover:bg-amber-950/40 transition-colors"
-            >
-              Sign out
-            </button>
-          </>
-        ) : (
-          <Link
-            href="/auth/signin"
-            className="rounded-lg bg-amber-500 px-3 py-1.5 text-gray-950 font-medium hover:bg-amber-400 transition-colors"
-          >
-            Sign in
-          </Link>
-        )}
+        <NavbarUserMenu session={session} />
       </div>
     </nav>
   );

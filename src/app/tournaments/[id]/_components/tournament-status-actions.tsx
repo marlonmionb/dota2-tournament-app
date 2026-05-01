@@ -25,10 +25,9 @@ export function TournamentStatusAction({ tournamentId, action, label }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/tournaments/${tournamentId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+      const endpoint = action === "open" ? "open-registration" : "close-registration";
+      const res = await fetch(`/api/tournaments/${tournamentId}/${endpoint}`, {
+        method: "POST",
       });
       if (!res.ok) {
         const json = await res.json();
