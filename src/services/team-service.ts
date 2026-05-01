@@ -3,7 +3,6 @@ import { findTournamentById, updateTournamentStatus } from "@/repositories/tourn
 import {
   createTeam as dbCreate,
   findTeamsByTournament,
-  findSteamIdsInTournament,
 } from "@/repositories/team-repository";
 import { registerTeamSchema, type RegisterTeamInput } from "@/lib/validations";
 import { parseSteamInput, fetchPlayerProfile } from "@/lib/steam";
@@ -42,7 +41,7 @@ export async function registerTeam(
   if (duplicate) throw new Error("A team with this name is already registered");
 
   // Enforce unique Steam IDs across the tournament
-  const existingSteamIds = await findSteamIdsInTournament(tournamentId);
+  const existingSteamIds = existingTeams.flatMap((t) => t.players.map((p) => p.steamId));
   const conflictingSteamId = data.players.find((p) =>
     existingSteamIds.includes(p.steamId)
   );

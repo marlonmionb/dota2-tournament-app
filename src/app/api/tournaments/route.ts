@@ -1,16 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { createTournament, getTournaments } from "@/services/tournament-service";
+import { createTournament } from "@/services/tournament-service";
 import { handleApiError } from "@/lib/api-error";
-
-export async function GET() {
-  try {
-    const tournaments = await getTournaments();
-    return NextResponse.json(tournaments);
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
-}
 
 export async function POST(request: Request) {
   try {
