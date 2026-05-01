@@ -9,6 +9,7 @@ import {
 } from "@/repositories/match-repository";
 import { matchResultSchema } from "@/lib/validations";
 import { prisma } from "@/lib/prisma";
+import { canGenerateBracket, canRecordResult } from "@/lib/tournament-rules";
 
 /**
  * Generates a single-elimination bracket by randomly seeding registered teams.
@@ -19,13 +20,12 @@ export async function generateBracket(tournamentId: string, organizerId: string)
   const tournament = await findTournamentById(tournamentId);
   if (!tournament) throw new Error("Tournament not found");
   if (tournament.organizerId !== organizerId) throw new Error("Forbidden");
-  if (tournament.status !== TournamentStatus.REGISTRATION_CLOSED)
-    throw new Error("Registration must be closed before generating the bracket");
   if (tournament.matches.length > 0)
     throw new Error("Bracket has already been generated for this tournament");
 
   const teams = await findTeamsByTournament(tournamentId);
-  if (teams.length < 2) throw new Error("At least 2 teams are required");
+  if (!canGenerateBracket(tournament, teams.length))
+    throw new Error("Registration must be closed and at least 2 teams must be registered");
   if ((teams.length & (teams.length - 1)) !== 0)
     throw new Error("Team count must be a power of 2 to generate this bracket");
 
@@ -106,7 +106,7 @@ export async function recordMatchResult(
   const match = await findMatchById(matchId);
   if (!match) throw new Error("Match not found");
   if (match.tournament.organizerId !== organizerId) throw new Error("Forbidden");
-  if (match.tournament.status !== TournamentStatus.IN_PROGRESS)
+  if (!canRecordResult(match.tournament))
     throw new Error("Tournament is not in progress");
   if (match.status === "COMPLETED") throw new Error("Match already completed");
   if (!match.teamAId || !match.teamBId)

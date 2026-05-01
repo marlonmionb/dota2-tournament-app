@@ -18,21 +18,7 @@ const RANK_TIER_LABELS: Record<number, string> = {
   8: "Immortal",
 };
 
-const statusLabels: Record<TournamentStatus, string> = {
-  DRAFT: "Draft",
-  REGISTRATION_OPEN: "Registration Open",
-  REGISTRATION_CLOSED: "Registration Closed",
-  IN_PROGRESS: "In Progress",
-  COMPLETED: "Completed",
-};
-
-const statusColors: Record<TournamentStatus, string> = {
-  DRAFT: "bg-gray-800 text-gray-300",
-  REGISTRATION_OPEN: "bg-green-950 text-green-400",
-  REGISTRATION_CLOSED: "bg-amber-950 text-amber-400",
-  IN_PROGRESS: "bg-blue-950 text-blue-400",
-  COMPLETED: "bg-slate-800 text-slate-400",
-};
+import { statusLabels, statusColors } from "@/lib/tournament-display";
 
 const PAGE_SIZE = 10;
 

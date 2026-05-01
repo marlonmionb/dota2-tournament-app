@@ -1,7 +1,8 @@
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { NextResponse, type NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextResponse } from "next/server";
 
 const PROTECTED_ROUTES = [
   /^\/tournaments\/new(\/|$)/,
@@ -14,13 +15,14 @@ const ratelimit = new Ratelimit({
   limiter: Ratelimit.slidingWindow(20, "1 m"),
 });
 
-export async function middleware(req: NextRequest) {
+const { auth } = NextAuth(authConfig);
+
+export default auth(async (req) => {
   const { pathname } = req.nextUrl;
 
   // Auth guard — redirect unauthenticated users before RSC runs
   if (PROTECTED_ROUTES.some((r) => r.test(pathname))) {
-    const session = await auth();
-    if (!session?.user) {
+    if (!req.auth?.user) {
       const signInUrl = req.nextUrl.clone();
       signInUrl.pathname = "/auth/signin";
       signInUrl.searchParams.set("callbackUrl", pathname);
@@ -38,7 +40,7 @@ export async function middleware(req: NextRequest) {
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: ["/api/:path*", "/tournaments/new", "/tournaments/:id/edit", "/tournaments/:id/register"],

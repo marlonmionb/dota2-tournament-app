@@ -7,6 +7,7 @@ import {
 } from "@/repositories/team-repository";
 import { registerTeamSchema, type RegisterTeamInput } from "@/lib/validations";
 import { parseSteamInput, fetchPlayerProfile } from "@/lib/steam";
+import { canRegister } from "@/lib/tournament-rules";
 
 export async function getPublicTeams(tournamentId: string) {
   return findTeamsByTournamentPublic(tournamentId);
@@ -31,7 +32,7 @@ export async function registerTeam(
 
   const tournament = await findTournamentById(tournamentId);
   if (!tournament) throw new Error("Tournament not found");
-  if (tournament.status !== TournamentStatus.REGISTRATION_OPEN)
+  if (!canRegister(tournament))
     throw new Error("Registration is not open for this tournament");
 
   // Check capacity

@@ -36,6 +36,18 @@ const nextConfig: NextConfig = {
         hostname: "stayqprxuhqimxtrgaoh.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      {
+        protocol: "https",
+        hostname: "avatars.steamstatic.com",
+      },
+      {
+        protocol: "https",
+        hostname: "avatars.akamai.steamstatic.com",
+      },
+      {
+        protocol: "https",
+        hostname: "steamcdn-a.akamaihd.net",
+      },
     ],
   },
 };
