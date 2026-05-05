@@ -109,6 +109,10 @@ export async function createTournament(
   });
 }
 
+export async function countTournamentsByOrganizer(organizerId: string) {
+  return prisma.tournament.count({ where: { organizerId } });
+}
+
 export async function updateTournamentStatus(
   id: string,
   status: TournamentStatus

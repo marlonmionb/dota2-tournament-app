@@ -1,6 +1,7 @@
 import { TournamentStatus } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import {
+  countTournamentsByOrganizer,
   createTournament as dbCreate,
   findAllTournaments,
   findAllTournamentsPaginated,
@@ -18,6 +19,7 @@ import { supabaseAdmin } from "@/utils/supabase/admin";
 
 const TEAM_LOGOS_BUCKET = "team-logos";
 const TOURNAMENT_IMAGES_BUCKET = "tournament-images";
+const MAX_TOURNAMENTS_PER_ORGANIZER = 3;
 
 export async function getTournaments() {
   return findAllTournaments();
@@ -54,6 +56,12 @@ export async function createTournament(
   input: CreateTournamentInput
 ) {
   const data = createTournamentSchema.parse(input);
+  const currentCount = await countTournamentsByOrganizer(organizerId);
+  if (currentCount >= MAX_TOURNAMENTS_PER_ORGANIZER) {
+    throw new Error(
+      `Tournament limit reached: each user can create up to ${MAX_TOURNAMENTS_PER_ORGANIZER} tournaments`
+    );
+  }
   return dbCreate(organizerId, data);
 }
 

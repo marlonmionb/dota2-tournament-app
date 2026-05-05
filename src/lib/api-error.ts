@@ -18,6 +18,7 @@ const KNOWN_MESSAGES = new Set([
   "Team count must be a power of 2 to generate this bracket",
   "All matches must be completed before closing the tournament",
   "Completed tournaments cannot be deleted",
+  "Tournament limit reached: each user can create up to 3 tournaments",
   "Invalid action",
   "Match not found",
   "Match is already completed",
