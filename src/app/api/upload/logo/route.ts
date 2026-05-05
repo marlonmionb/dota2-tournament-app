@@ -15,6 +15,10 @@ const ALLOWED_MIME_EXTENSIONS: Record<string, string> = {
 export async function POST(request: Request) {
   const session = await auth();
 
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const formData = await request.formData();
   const file = formData.get("file");
 
@@ -41,7 +45,7 @@ export async function POST(request: Request) {
   }
 
   const ext = ALLOWED_MIME_EXTENSIONS[detected.mime];
-  const ownerSegment = session?.user?.id ?? "anonymous";
+  const ownerSegment = session.user.id;
   // Use owner segment + timestamp + random suffix to avoid collisions.
   const path = `${ownerSegment}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
 
