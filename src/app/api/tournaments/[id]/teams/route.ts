@@ -22,13 +22,10 @@ export async function POST(
 ) {
   try {
     const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const { id } = await params;
     const body = await request.json();
-    const team = await registerTeam(id, body, session.user.id);
+    const team = await registerTeam(id, body, session?.user?.id ?? null);
     return NextResponse.json(team, { status: 201 });
   } catch (error) {
     return handleApiError(error);

@@ -14,9 +14,6 @@ const ALLOWED_MIME_EXTENSIONS: Record<string, string> = {
 
 export async function POST(request: Request) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
   const formData = await request.formData();
   const file = formData.get("file");
@@ -44,8 +41,9 @@ export async function POST(request: Request) {
   }
 
   const ext = ALLOWED_MIME_EXTENSIONS[detected.mime];
-  // Use userId + timestamp to avoid collisions; no user-controlled path segments
-  const path = `${session.user.id}/${Date.now()}.${ext}`;
+  const ownerSegment = session?.user?.id ?? "anonymous";
+  // Use owner segment + timestamp + random suffix to avoid collisions.
+  const path = `${ownerSegment}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
 
   const { error } = await supabaseAdmin.storage
     .from(BUCKET)
