@@ -1,5 +1,7 @@
 import { unstable_cache } from "next/cache";
 import Image from "next/image";
+import Link from "next/link";
+import { Pencil } from "lucide-react";
 import {
   steamIdToAccountId,
   fetchPlayerProfile,
@@ -11,6 +13,7 @@ import type { TeamWithPlayers } from "@/types";
 
 type Props = {
   team: TeamWithPlayers;
+  editHref?: string;
 };
 
 const getCachedPlayerProfile = unstable_cache(
@@ -26,7 +29,7 @@ const getCachedPlayerProfile = unstable_cache(
   { revalidate: 3600 }
 );
 
-export async function TeamCard({ team }: Props) {
+export async function TeamCard({ team, editHref }: Props) {
   const profiles = await Promise.all(
     team.players.map((p) => getCachedPlayerProfile(p.steamId))
   );
@@ -47,7 +50,18 @@ export async function TeamCard({ team }: Props) {
             "Logo"
           )}
         </div>
-        <h3 className="font-semibold text-base">{team.teamName}</h3>
+        <div className="flex-1 min-w-0 flex items-center gap-2">
+          <h3 className="font-semibold text-base truncate">{team.teamName}</h3>
+          {editHref && (
+            <Link
+              href={editHref}
+              className="ml-auto shrink-0 p-1.5 rounded-lg border border-gray-700 text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition-colors"
+              title="Edit team"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </Link>
+          )}
+        </div>
       </div>
       <ul className="space-y-3">
         {team.players.map((player, i) => {

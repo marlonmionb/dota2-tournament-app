@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 const PROTECTED_ROUTES = [
   /^\/tournaments\/new(\/|$)/,
   /^\/tournaments\/[^/]+\/edit(\/|$)/,
+  /^\/tournaments\/[^/]+\/teams\/[^/]+\/edit(\/|$)/,
 ];
 
 const ratelimit = new Ratelimit({
@@ -47,5 +48,5 @@ export default auth(async (req) => {
 });
 
 export const config = {
-  matcher: ["/api/:path*", "/tournaments/new", "/tournaments/:id/edit"],
+  matcher: ["/api/:path*", "/tournaments/new", "/tournaments/:id/edit", "/tournaments/:id/teams/:teamId/edit"],
 };

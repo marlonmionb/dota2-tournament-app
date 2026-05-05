@@ -44,6 +44,25 @@ export async function createTeam(
   });
 }
 
+export async function updateTeam(
+  teamId: string,
+  data: RegisterTeamInput
+) {
+  return prisma.team.update({
+    where: { id: teamId },
+    data: {
+      teamName: data.teamName,
+      captainName: data.captainName,
+      logoUrl: data.logoUrl || null,
+      players: {
+        deleteMany: {},
+        create: data.players,
+      },
+    },
+    include: { players: true },
+  });
+}
+
 /**
  * Returns all steam IDs already registered in a tournament.
  * Used to enforce the unique-steam-ID-per-tournament rule.

@@ -249,7 +249,14 @@ export default async function TournamentPage({
                   </div>
                 }
               >
-                <TeamCard team={team} />
+                <TeamCard
+                  team={team}
+                  editHref={
+                    isOrganizer || session?.user?.id === team.registeredById
+                      ? `/tournaments/${tournament.id}/teams/${team.id}/edit`
+                      : undefined
+                  }
+                />
               </Suspense>
             ))}
           </div>
