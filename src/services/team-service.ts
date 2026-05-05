@@ -1,7 +1,7 @@
-import { TournamentStatus } from "@prisma/client";
-import { findTournamentById, updateTournamentStatus } from "@/repositories/tournament-repository";
+import { Prisma, TournamentStatus } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { findTournamentById } from "@/repositories/tournament-repository";
 import {
-  createTeam as dbCreate,
   findTeamsByTournament,
   findTeamsByTournamentPublic,
   findTeamById,
@@ -50,43 +50,8 @@ export async function registerTeam(
 ) {
   const data = registerTeamSchema.parse(input);
 
-  const tournament = await findTournamentById(tournamentId);
-  if (!tournament) throw new Error("Tournament not found");
-  if (!canRegister(tournament))
-    throw new Error("Registration is not open for this tournament");
-
-  // Check capacity
-  const existingTeams = await findTeamsByTournament(tournamentId);
-  if (existingTeams.length >= tournament.maxTeams)
-    throw new Error("Tournament is full");
-
-  // Enforce unique team name
-  const duplicate = existingTeams.find(
-    (t) => t.teamName.toLowerCase() === data.teamName.toLowerCase()
-  );
-  if (duplicate) throw new Error("A team with this name is already registered");
-
-  // One team per user per tournament
-  if (registeredById && existingTeams.some((t) => t.registeredById === registeredById))
-    throw new Error("You have already registered a team for this tournament");
-
-  // Enforce unique Steam IDs across the tournament
-  const existingSteamIds = existingTeams.flatMap((t) => t.players.map((p) => p.steamId));
-  const conflictingSteamId = data.players.find((p) =>
-    existingSteamIds.includes(p.steamId)
-  );
-  if (conflictingSteamId)
-    throw new Error(
-      `Steam ID ${conflictingSteamId.steamId} is already registered in this tournament`
-    );
-
-  // Enforce unique Steam IDs within the submitted team
-  const steamIds = data.players.map((p) => p.steamId);
-  const uniqueSteamIds = new Set(steamIds);
-  if (uniqueSteamIds.size !== steamIds.length)
-    throw new Error("Duplicate Steam IDs within the team are not allowed");
-
-  // Resolve each player's canonical Steam persona name server-side
+  // Resolve player nicknames via OpenDota BEFORE opening a DB transaction.
+  // Network calls must not block a serializable transaction.
   const verifiedPlayers = await Promise.all(
     data.players.map(async (p) => ({
       steamId: p.steamId,
@@ -94,15 +59,60 @@ export async function registerTeam(
     }))
   );
 
-  const team = await dbCreate(tournamentId, { ...data, players: verifiedPlayers }, registeredById);
+  return prisma.$transaction(async (tx) => {
+    const tournament = await tx.tournament.findUnique({
+      where: { id: tournamentId },
+      include: { teams: { include: { players: { select: { steamId: true } } } } },
+    });
 
-  // Auto-close registration when max teams reached
-  const newCount = existingTeams.length + 1;
-  if (newCount >= tournament.maxTeams) {
-    await updateTournamentStatus(tournamentId, TournamentStatus.REGISTRATION_CLOSED);
-  }
+    if (!tournament) throw new Error("Tournament not found");
+    if (!canRegister(tournament))
+      throw new Error("Registration is not open for this tournament");
 
-  return team;
+    if (tournament.teams.length >= tournament.maxTeams)
+      throw new Error("Tournament is full");
+
+    const duplicate = tournament.teams.find(
+      (t) => t.teamName.toLowerCase() === data.teamName.toLowerCase()
+    );
+    if (duplicate) throw new Error("A team with this name is already registered");
+
+    if (registeredById && tournament.teams.some((t) => t.registeredById === registeredById))
+      throw new Error("You have already registered a team for this tournament");
+
+    const existingSteamIds = tournament.teams.flatMap((t) => t.players.map((p) => p.steamId));
+    const conflictingSteamId = data.players.find((p) => existingSteamIds.includes(p.steamId));
+    if (conflictingSteamId)
+      throw new Error(
+        `Steam ID ${conflictingSteamId.steamId} is already registered in this tournament`
+      );
+
+    const steamIds = data.players.map((p) => p.steamId);
+    if (new Set(steamIds).size !== steamIds.length)
+      throw new Error("Duplicate Steam IDs within the team are not allowed");
+
+    const team = await tx.team.create({
+      data: {
+        teamName: data.teamName,
+        captainName: data.captainName,
+        logoUrl: data.logoUrl || null,
+        tournamentId,
+        registeredById,
+        players: { create: verifiedPlayers },
+      },
+      include: { players: true },
+    });
+
+    // Auto-close registration when max teams reached
+    if (tournament.teams.length + 1 >= tournament.maxTeams) {
+      await tx.tournament.update({
+        where: { id: tournamentId },
+        data: { status: TournamentStatus.REGISTRATION_CLOSED },
+      });
+    }
+
+    return team;
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
 export async function getTeams(tournamentId: string) {

@@ -65,6 +65,11 @@ const MEDAL_NAMES = [
   "Immortal",
 ] as const;
 
+/** Returns the medal name for a medal number (0–8), e.g. medalLabel(5) → "Legend". */
+export function medalLabel(medal: number): string {
+  return MEDAL_NAMES[medal] ?? String(medal);
+}
+
 /** Returns a human-readable rank label, e.g. "Legend [3]" or "Immortal". */
 export function rankTierToLabel(rankTier: number): string {
   if (!rankTier) return "Unranked";

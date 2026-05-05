@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  fetchPlayerProfile,
   parseSteamInput,
   rankTierColor,
   rankTierToLabel,
@@ -53,7 +52,12 @@ export default function RegisterTeamForm({ tournamentId, maxRankTier }: { tourna
   async function doLookup(index: number, input: string) {
     try {
       const accountId = parseSteamInput(input);
-      const data = await fetchPlayerProfile(accountId);
+      const res = await fetch(`/api/steam/${accountId}`);
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error ?? "Player not found");
+      }
+      const data: OpenDotaPlayer = await res.json();
       patchPlayer(index, {
         steamId: data.profile.steamid,
         nickname: data.profile.personaname,

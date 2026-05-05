@@ -14,17 +14,8 @@ import { DeleteTournamentAction } from "./_components/delete-tournament-action";
 import { BracketTree } from "./_components/bracket-tree";
 import { TeamCard } from "./_components/team-card";
 import type { MatchWithTeams, BracketRound, TeamWithPlayers } from "@/types";
-
-const RANK_TIER_LABELS: Record<number, string> = {
-  1: "Herald",
-  2: "Guardian",
-  3: "Crusader",
-  4: "Archon",
-  5: "Legend",
-  6: "Ancient",
-  7: "Divine",
-  8: "Immortal",
-};
+import { statusLabels } from "@/lib/tournament-display";
+import { medalLabel } from "@/lib/steam";
 
 function groupMatchesByRound(matches: MatchWithTeams[]): BracketRound[] {
   const map = new Map<number, MatchWithTeams[]>();
@@ -59,14 +50,6 @@ function statusBadgeClass(status: TournamentStatus): string {
     default:
       return "border-gray-700 bg-gray-800 text-gray-300";
   }
-}
-
-function statusLabel(status: TournamentStatus): string {
-  return status
-    .toLowerCase()
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
 }
 
 export default async function TournamentPage({
@@ -109,7 +92,7 @@ export default async function TournamentPage({
         <h1 className="text-3xl font-bold leading-tight break-words max-w-prose">{tournament.name}</h1>
         <div className="flex flex-wrap items-center gap-2 mt-2">
           <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusBadgeClass(tournament.status)}`}>
-            {statusLabel(tournament.status)}
+            {statusLabels[tournament.status]}
           </span>
           <span className="text-xs text-gray-500">
             Max teams: {tournament.maxTeams} · Single Elimination
@@ -120,7 +103,7 @@ export default async function TournamentPage({
           {tournament.maxRankTier != null && (
             <span className="inline-flex items-center gap-1 rounded-full border border-rose-800 bg-rose-950 px-2.5 py-0.5 text-xs font-semibold text-rose-400">
               <ShieldAlert className="w-3 h-3" />
-              Max rank: {RANK_TIER_LABELS[tournament.maxRankTier] ?? tournament.maxRankTier}
+              Max rank: {medalLabel(tournament.maxRankTier)}
             </span>
           )}
         </div>

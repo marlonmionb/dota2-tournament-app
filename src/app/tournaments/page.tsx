@@ -6,19 +6,8 @@ import { TournamentStatus } from "@prisma/client";
 import { Trophy, ShieldAlert, ChevronLeft, ChevronRight } from "lucide-react";
 import { currencySymbol } from "@/lib/currencies";
 import { TournamentFilterBar } from "./_components/tournament-filter-bar";
-
-const RANK_TIER_LABELS: Record<number, string> = {
-  1: "Herald",
-  2: "Guardian",
-  3: "Crusader",
-  4: "Archon",
-  5: "Legend",
-  6: "Ancient",
-  7: "Divine",
-  8: "Immortal",
-};
-
 import { statusLabels, statusColors } from "@/lib/tournament-display";
+import { medalLabel } from "@/lib/steam";
 
 const PAGE_SIZE = 10;
 
@@ -148,7 +137,7 @@ export default async function TournamentsPage({
                       {t.maxRankTier != null && (
                         <span className="flex items-center gap-1 text-rose-400 font-medium">
                           <ShieldAlert className="w-3.5 h-3.5" />
-                          Max: {RANK_TIER_LABELS[t.maxRankTier] ?? t.maxRankTier}
+                          Max: {medalLabel(t.maxRankTier)}
                         </span>
                       )}
                     </div>
