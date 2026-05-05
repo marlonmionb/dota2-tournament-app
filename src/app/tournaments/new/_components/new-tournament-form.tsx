@@ -57,7 +57,7 @@ export default function NewTournamentForm() {
       discordUrl: (form.elements.namedItem("discordUrl") as HTMLInputElement).value || undefined,
       streamUrl: (form.elements.namedItem("streamUrl") as HTMLInputElement).value || undefined,
       entryFee: entryFeeRaw !== "" ? parseFloat(entryFeeRaw) : undefined,
-      prizePool: (form.elements.namedItem("prizePool") as HTMLInputElement).value || undefined,
+      prizePool: (() => { const v = (form.elements.namedItem("prizePool") as HTMLInputElement).value; return v !== "" ? parseFloat(v) : undefined; })(),
       currency: (form.elements.namedItem("currency") as HTMLSelectElement).value,
       region: (form.elements.namedItem("region") as HTMLSelectElement).value,
       maxRankTier: (() => {
@@ -314,8 +314,10 @@ export default function NewTournamentForm() {
             <input
               id="prizePool"
               name="prizePool"
-              type="text"
-              placeholder="e.g. 500, Steam Keys…"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
               className="w-full border border-gray-700 bg-gray-900 text-gray-100 placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>

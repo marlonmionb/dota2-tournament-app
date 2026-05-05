@@ -139,10 +139,10 @@ export default async function TournamentsPage({
                       {t.entryFee === 0 && (
                         <span className="text-green-400 font-medium">Free entry</span>
                       )}
-                      {t.prizePool && (
+                      {t.prizePool != null && (
                         <span className="flex items-center gap-1 text-yellow-400 font-medium">
                           <Trophy className="w-3.5 h-3.5" />
-                          {t.prizePool}
+                          {currencySymbol(t.currency)}{t.prizePool.toFixed(2)}
                         </span>
                       )}
                       {t.maxRankTier != null && (

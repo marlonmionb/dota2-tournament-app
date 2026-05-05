@@ -127,12 +127,12 @@ export default async function TournamentPage({
         {tournament.description && (
           <p className="text-gray-400 mt-2 text-sm">{tournament.description}</p>
         )}
-        {(tournament.prizePool || tournament.entryFee || tournament.discordUrl || tournament.streamUrl) && (
+        {(tournament.prizePool != null || tournament.entryFee != null || tournament.discordUrl || tournament.streamUrl) && (
           <div className="flex flex-wrap gap-4 mt-3 text-sm">
-            {tournament.prizePool && (
+            {tournament.prizePool != null && (
               <span className="flex items-center gap-1.5 text-amber-400">
                 <Trophy className="w-4 h-4" />
-                <span>{currencySymbol(tournament.currency)}{tournament.prizePool}</span>
+                <span>{currencySymbol(tournament.currency)}{tournament.prizePool.toFixed(2)}</span>
               </span>
             )}
             {tournament.entryFee != null && (

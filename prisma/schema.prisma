@@ -81,7 +81,7 @@ model Tournament {
   discordUrl           String?          @map("discord_url")
   streamUrl            String?          @map("stream_url")
   entryFee             Float?           @map("entry_fee")
-  prizePool            String?          @map("prize_pool")
+  prizePool            Float?           @map("prize_pool")
   currency             String           @default("USD") @map("currency")
   region               String?          @map("region")
   maxRankTier          Int?             @map("max_rank_tier")
