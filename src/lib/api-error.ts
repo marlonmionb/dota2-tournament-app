@@ -16,6 +16,7 @@ const KNOWN_MESSAGES = new Set([
   "You have already registered a team for this tournament",
   "Duplicate Steam IDs within the team are not allowed",
   "Tournament is not in draft state",
+  "Registration deadline has already passed",
   "Only draft tournaments can be edited",
   "Registration must be closed before generating the bracket",
   "Bracket has already been generated for this tournament",
