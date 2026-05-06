@@ -136,16 +136,16 @@ export default async function Home() {
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
                         <span>Starts {new Date(t.startDate).toLocaleDateString()}</span>
-                        {t.entryFee != null && t.entryFee > 0 && (
-                          <span className="text-amber-400 font-medium">Entry: {currencySymbol(t.currency)}{t.entryFee.toFixed(2)} / team</span>
+                        {t.entryFee != null && Number(t.entryFee) > 0 && (
+                          <span className="text-amber-400 font-medium">Entry: {currencySymbol(t.currency)}{Number(t.entryFee).toFixed(2)} / team</span>
                         )}
-                        {t.entryFee === 0 && (
+                        {t.entryFee != null && Number(t.entryFee) === 0 && (
                           <span className="text-green-400 font-medium">Free entry</span>
                         )}
                         {t.prizePool != null && (
                           <span className="flex items-center gap-1 text-yellow-400 font-medium">
                             <Trophy className="w-3.5 h-3.5" />
-                            {currencySymbol(t.currency)}{t.prizePool.toFixed(2)}
+                            {currencySymbol(t.currency)}{Number(t.prizePool).toFixed(2)}
                           </span>
                         )}
                         {t.maxRankTier != null && (
@@ -224,7 +224,7 @@ export default async function Home() {
                       {t.prizePool != null && (
                         <p className="flex items-center gap-1 text-xs text-yellow-400 font-medium">
                           <Trophy className="w-3.5 h-3.5" />
-                          {currencySymbol(t.currency)}{t.prizePool.toFixed(2)}
+                          {currencySymbol(t.currency)}{Number(t.prizePool).toFixed(2)}
                         </p>
                       )}
                     </div>

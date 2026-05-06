@@ -148,7 +148,7 @@ export default async function TournamentPage({
             {tournament.prizePool != null && (
               <span className="flex items-center gap-1.5 text-amber-400">
                 <Trophy className="w-4 h-4" />
-                <span>{currencySymbol(tournament.currency)}{tournament.prizePool.toFixed(2)}</span>
+                <span>{currencySymbol(tournament.currency)}{Number(tournament.prizePool).toFixed(2)}</span>
               </span>
             )}
             {tournament.entryFee != null && (
