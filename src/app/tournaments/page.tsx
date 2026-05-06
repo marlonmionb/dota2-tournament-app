@@ -2,12 +2,18 @@ import { Suspense } from "react";
 import { getTournamentsPaginated } from "@/services/tournament-service";
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
 import { TournamentStatus } from "@prisma/client";
 import { Trophy, ShieldAlert, ChevronLeft, ChevronRight } from "lucide-react";
 import { currencySymbol } from "@/lib/currencies";
 import { TournamentFilterBar } from "./_components/tournament-filter-bar";
 import { statusLabels, statusColors } from "@/lib/tournament-display";
 import { medalLabel } from "@/lib/steam";
+
+export const metadata: Metadata = {
+  title: "Tournaments — Draft Arena",
+  description: "Browse and join amateur Dota 2 tournaments. Filter by status, region, rank, and entry fee.",
+};
 
 const PAGE_SIZE = 10;
 
