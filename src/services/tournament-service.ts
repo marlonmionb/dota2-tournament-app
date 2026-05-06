@@ -1,5 +1,5 @@
 import { TournamentStatus } from "@prisma/client";
-import { unstable_cache } from "next/cache";
+import { unstable_cache, revalidateTag } from "next/cache";
 import {
   countTournamentsByOrganizer,
   createTournament as dbCreate,
@@ -28,7 +28,7 @@ export async function getTournaments() {
 const getCachedHomepageTournaments = unstable_cache(
   findHomepageTournaments,
   ["homepage-tournaments"],
-  { revalidate: 60 }
+  { revalidate: 60, tags: ["homepage-tournaments"] }
 );
 
 export async function getHomepageTournaments() {
@@ -85,7 +85,11 @@ export async function openRegistration(tournamentId: string, organizerId: string
   if (tournament.organizerId !== organizerId) throw new Error("Forbidden");
   if (tournament.status !== TournamentStatus.DRAFT)
     throw new Error("Tournament is not in draft state");
-  return updateTournamentStatus(tournamentId, TournamentStatus.REGISTRATION_OPEN);
+  if (new Date() >= tournament.registrationDeadline)
+    throw new Error("Registration deadline has already passed");
+  const result = await updateTournamentStatus(tournamentId, TournamentStatus.REGISTRATION_OPEN);
+  revalidateTag("homepage-tournaments", "max");
+  return result;
 }
 
 export async function closeRegistration(tournamentId: string, organizerId: string) {
@@ -94,7 +98,9 @@ export async function closeRegistration(tournamentId: string, organizerId: strin
   if (tournament.organizerId !== organizerId) throw new Error("Forbidden");
   if (tournament.status !== TournamentStatus.REGISTRATION_OPEN)
     throw new Error("Registration is not open");
-  return updateTournamentStatus(tournamentId, TournamentStatus.REGISTRATION_CLOSED);
+  const result = await updateTournamentStatus(tournamentId, TournamentStatus.REGISTRATION_CLOSED);
+  revalidateTag("homepage-tournaments", "max");
+  return result;
 }
 
 export async function completeTournament(tournamentId: string, organizerId: string) {
