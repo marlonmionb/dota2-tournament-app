@@ -30,8 +30,8 @@ export default auth(async (req) => {
     }
   }
 
-  // Rate limit API routes
-  if (pathname.startsWith("/api/")) {
+  // Rate limit API routes — exclude auth callbacks to avoid blocking OAuth flows
+  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/auth/")) {
     // Prefer x-real-ip (set by Vercel's edge; clients cannot spoof it).
     // Fall back to the leftmost entry in X-Forwarded-For (originating client).
     // Never use the full header string as a key — it's comma-separated and client-controllable.
