@@ -2,6 +2,7 @@ import { getTournamentById } from "@/services/tournament-service";
 import { auth } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { TournamentStatus } from "@prisma/client";
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { Trophy, DollarSign, Radio, ShieldAlert } from "lucide-react";
@@ -50,6 +51,38 @@ function statusBadgeClass(status: TournamentStatus): string {
     default:
       return "border-gray-700 bg-gray-800 text-gray-300";
   }
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const tournament = await getTournamentById(id).catch(() => null);
+  if (!tournament) return {};
+
+  const title = `${tournament.name} — Draft Arena`;
+  const description = tournament.description
+    ?? `${statusLabels[tournament.status]} · Up to ${tournament.maxTeams} teams · Single Elimination`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      ...(tournament.imageUrl && {
+        images: [{ url: tournament.imageUrl, width: 1200, height: 630, alt: tournament.name }],
+      }),
+    },
+    twitter: {
+      card: tournament.imageUrl ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(tournament.imageUrl && { images: [tournament.imageUrl] }),
+    },
+  };
 }
 
 export default async function TournamentPage({
