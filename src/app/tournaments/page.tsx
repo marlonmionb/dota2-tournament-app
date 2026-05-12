@@ -4,11 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { TournamentStatus } from "@prisma/client";
-import { Trophy, ShieldAlert, ChevronLeft, ChevronRight, CalendarX } from "lucide-react";
+import { Trophy, ShieldAlert, ChevronLeft, ChevronRight, CalendarX, MapPin } from "lucide-react";
 import { currencySymbol } from "@/lib/currencies";
 import { TournamentFilterBar } from "./_components/tournament-filter-bar";
 import { statusLabels, statusColors } from "@/lib/tournament-display";
 import { medalLabel } from "@/lib/steam";
+import { DOTA2_REGIONS } from "@/lib/regions";
 
 export const metadata: Metadata = {
   title: "Tournaments — Draft Arena",
@@ -16,6 +17,17 @@ export const metadata: Metadata = {
 };
 
 const PAGE_SIZE = 10;
+
+const regionMap: Record<string, string> = Object.fromEntries(
+  DOTA2_REGIONS.map((r) => [r.code, r.label])
+);
+
+function formatRelativeDate(date: Date): string {
+  const diffDays = Math.round((date.getTime() - Date.now()) / 86_400_000);
+  if (Math.abs(diffDays) > 14) return date.toLocaleDateString();
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  return rtf.format(diffDays, "day");
+}
 
 export default async function TournamentsPage({
   searchParams,
@@ -140,7 +152,13 @@ export default async function TournamentsPage({
 
                     {/* Meta row */}
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
-                      <span>Starts {new Date(t.startDate).toLocaleDateString()}</span>
+                      {t.region && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5" />
+                          {regionMap[t.region] ?? t.region}
+                        </span>
+                      )}
+                      <span>{new Date(t.startDate) <= new Date() ? "Started" : "Starts"} {formatRelativeDate(new Date(t.startDate))}</span>
                       {(() => {
                         const deadline = new Date(t.registrationDeadline);
                         const isPast = deadline < new Date();
@@ -148,8 +166,8 @@ export default async function TournamentsPage({
                           <span className={`flex items-center gap-1 ${isPast ? "text-red-400" : ""}`}>
                             <CalendarX className="w-3.5 h-3.5" />
                             {isPast
-                              ? `Reg. closed ${deadline.toLocaleDateString()}`
-                              : `Reg. closes ${deadline.toLocaleDateString()}`}
+                              ? `Reg. closed ${formatRelativeDate(deadline)}`
+                              : `Reg. closes ${formatRelativeDate(deadline)}`}
                           </span>
                         );
                       })()}
@@ -175,16 +193,32 @@ export default async function TournamentsPage({
 
                     {/* Teams progress bar */}
                     <div>
-                      <div className="flex justify-between text-xs text-gray-400 mb-1">
-                        <span>Teams registered</span>
-                        <span>{teamCount} / {t.maxTeams}</span>
-                      </div>
-                      <div className="h-1.5 w-full rounded-full bg-gray-800 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-amber-500 transition-all"
-                          style={{ width: `${fillPct}%` }}
-                        />
-                      </div>
+                      {teamCount >= t.maxTeams ? (
+                        <p className="text-xs font-medium text-red-400">Full — no spots remaining</p>
+                      ) : (
+                        <>
+                          <div className="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>
+                              {fillPct >= 75
+                                ? `${t.maxTeams - teamCount} spot${t.maxTeams - teamCount === 1 ? "" : "s"} left`
+                                : "Teams registered"}
+                            </span>
+                            <span>{teamCount} / {t.maxTeams}</span>
+                          </div>
+                          <div className="h-2 w-full rounded-full bg-gray-800 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${
+                                fillPct >= 90
+                                  ? "bg-red-500"
+                                  : fillPct >= 75
+                                  ? "bg-orange-500"
+                                  : "bg-amber-500"
+                              }`}
+                              style={{ width: `${fillPct}%` }}
+                            />
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </Link>
