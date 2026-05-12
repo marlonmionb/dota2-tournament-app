@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { TournamentStatus } from "@prisma/client";
-import { Trophy, ShieldAlert, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trophy, ShieldAlert, ChevronLeft, ChevronRight, CalendarX } from "lucide-react";
 import { currencySymbol } from "@/lib/currencies";
 import { TournamentFilterBar } from "./_components/tournament-filter-bar";
 import { statusLabels, statusColors } from "@/lib/tournament-display";
@@ -26,9 +26,15 @@ export default async function TournamentsPage({
 
   const page = Math.max(1, parseInt((Array.isArray(pageParam) ? pageParam[0] : pageParam) ?? "1", 10) || 1);
 
-  // Parse and validate filter params
+  // Parse and validate filter params — DRAFT is excluded from the public list
+  const PUBLIC_STATUSES = [
+    TournamentStatus.REGISTRATION_OPEN,
+    TournamentStatus.REGISTRATION_CLOSED,
+    TournamentStatus.IN_PROGRESS,
+    TournamentStatus.COMPLETED,
+  ] as const;
   const rawStatus = Array.isArray(statusParam) ? statusParam[0] : statusParam;
-  const status = rawStatus && (Object.values(TournamentStatus) as string[]).includes(rawStatus)
+  const status = rawStatus && (PUBLIC_STATUSES as readonly string[]).includes(rawStatus)
     ? rawStatus as TournamentStatus
     : undefined;
 
@@ -90,6 +96,13 @@ export default async function TournamentsPage({
 
             return (
               <li key={t.id}>
+                {(() => {
+                  const effectiveStatus =
+                    t.status === TournamentStatus.REGISTRATION_OPEN &&
+                    new Date(t.registrationDeadline) < new Date()
+                      ? TournamentStatus.REGISTRATION_CLOSED
+                      : t.status;
+                  return (
                 <Link
                   href={`/tournaments/${t.id}`}
                   className="flex gap-4 border border-gray-800 rounded-lg overflow-hidden hover:border-amber-500 transition-all"
@@ -120,14 +133,26 @@ export default async function TournamentsPage({
                           <p className="text-gray-400 mt-1 text-sm line-clamp-2">{t.description}</p>
                         )}
                       </div>
-                      <span className={`shrink-0 text-xs font-medium px-2 py-1 rounded-full ${statusColors[t.status]}`}>
-                        {statusLabels[t.status]}
+                      <span className={`shrink-0 text-xs font-medium px-2 py-1 rounded-full ${statusColors[effectiveStatus]}`}>
+                        {statusLabels[effectiveStatus]}
                       </span>
                     </div>
 
                     {/* Meta row */}
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
                       <span>Starts {new Date(t.startDate).toLocaleDateString()}</span>
+                      {(() => {
+                        const deadline = new Date(t.registrationDeadline);
+                        const isPast = deadline < new Date();
+                        return (
+                          <span className={`flex items-center gap-1 ${isPast ? "text-red-400" : ""}`}>
+                            <CalendarX className="w-3.5 h-3.5" />
+                            {isPast
+                              ? `Reg. closed ${deadline.toLocaleDateString()}`
+                              : `Reg. closes ${deadline.toLocaleDateString()}`}
+                          </span>
+                        );
+                      })()}
                       {t.entryFee != null && Number(t.entryFee) > 0 && (
                         <span className="text-amber-400 font-medium">Entry: {currencySymbol(t.currency)}{Number(t.entryFee).toFixed(2)} / team</span>
                       )}
@@ -163,6 +188,8 @@ export default async function TournamentsPage({
                     </div>
                   </div>
                 </Link>
+                  );
+                })()}
               </li>
             );
           })}

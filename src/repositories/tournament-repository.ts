@@ -45,7 +45,11 @@ export async function findAllTournamentsPaginated(
   const skip = (page - 1) * pageSize;
 
   const where: Prisma.TournamentWhereInput = {};
-  if (filters.status) where.status = filters.status;
+  if (filters.status) {
+    where.status = filters.status;
+  } else {
+    where.status = { not: TournamentStatus.DRAFT };
+  }
   if (filters.region) where.region = filters.region;
   if (filters.entry === "free") where.OR = [{ entryFee: null }, { entryFee: 0 }];
   if (filters.entry === "paid") where.entryFee = { gt: 0 };

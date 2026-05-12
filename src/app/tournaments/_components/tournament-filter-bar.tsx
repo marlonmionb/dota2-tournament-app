@@ -22,7 +22,6 @@ const STATUS_OPTIONS: { value: TournamentStatus | ""; label: string }[] = [
   { value: TournamentStatus.REGISTRATION_OPEN, label: "Registration Open" },
   { value: TournamentStatus.IN_PROGRESS, label: "In Progress" },
   { value: TournamentStatus.COMPLETED, label: "Completed" },
-  { value: TournamentStatus.DRAFT, label: "Draft" },
 ];
 
 export function TournamentFilterBar() {
