@@ -8,6 +8,7 @@ export interface TournamentFilters {
   entry?: "free" | "paid";
   maxRank?: number;
   search?: string;
+  sort?: "startDate" | "registrationDeadline" | "createdAt";
 }
 
 export async function findAllTournaments() {
@@ -56,12 +57,19 @@ export async function findAllTournamentsPaginated(
   if (filters.maxRank != null) where.maxRankTier = filters.maxRank;
   if (filters.search) where.name = { contains: filters.search, mode: "insensitive" };
 
+  const orderBy: Prisma.TournamentOrderByWithRelationInput =
+    filters.sort === "registrationDeadline"
+      ? { registrationDeadline: "asc" }
+      : filters.sort === "createdAt"
+      ? { createdAt: "desc" }
+      : { startDate: "asc" }; // default: soonest start
+
   const [tournaments, total] = await Promise.all([
     prisma.tournament.findMany({
       skip,
       take: pageSize,
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy,
       include: {
         organizer: { select: { id: true, name: true, image: true } },
         _count: { select: { teams: true } },

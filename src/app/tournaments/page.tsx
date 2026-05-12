@@ -34,7 +34,7 @@ export default async function TournamentsPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { page: pageParam, status: statusParam, region: regionParam, entry: entryParam, maxRank: maxRankParam, search: searchParam } = await searchParams;
+  const { page: pageParam, status: statusParam, region: regionParam, entry: entryParam, maxRank: maxRankParam, search: searchParam, sort: sortParam } = await searchParams;
 
   const page = Math.max(1, parseInt((Array.isArray(pageParam) ? pageParam[0] : pageParam) ?? "1", 10) || 1);
 
@@ -61,7 +61,13 @@ export default async function TournamentsPage({
 
   const search = (Array.isArray(searchParam) ? searchParam[0] : searchParam) || undefined;
 
-  const { tournaments, total } = await getTournamentsPaginated(page, PAGE_SIZE, { status, region, entry, maxRank, search });
+  const SORT_OPTIONS = ["startDate", "registrationDeadline", "createdAt"] as const;
+  const rawSort = Array.isArray(sortParam) ? sortParam[0] : sortParam;
+  const sort = rawSort && (SORT_OPTIONS as readonly string[]).includes(rawSort)
+    ? rawSort as typeof SORT_OPTIONS[number]
+    : "startDate";
+
+  const { tournaments, total } = await getTournamentsPaginated(page, PAGE_SIZE, { status, region, entry, maxRank, search, sort });
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   // Build paginated URLs that preserve the active filters
@@ -71,6 +77,7 @@ export default async function TournamentsPage({
   if (entry) filterEntries.entry = entry;
   if (maxRank != null) filterEntries.maxRank = String(maxRank);
   if (search) filterEntries.search = search;
+  if (sort && sort !== "startDate") filterEntries.sort = sort;
 
   function pageUrl(p: number) {
     const params = new URLSearchParams(filterEntries);
@@ -81,7 +88,7 @@ export default async function TournamentsPage({
   const hasFilters = !!(status || region || entry || maxRank || search);
 
   return (
-    <div className="max-w-4xl mx-auto p-8">
+    <div className="max-w-6xl mx-auto p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Tournaments</h1>
         <Link
@@ -120,18 +127,18 @@ export default async function TournamentsPage({
                   className="flex gap-4 border border-gray-800 rounded-lg overflow-hidden hover:border-amber-500 transition-all"
                 >
                   {/* Banner */}
-                  <div className="w-36 shrink-0 bg-gray-900 relative">
+                  <div className="w-44 shrink-0 bg-gray-900 relative">
                     {t.imageUrl ? (
                       <Image
                         src={t.imageUrl}
                         alt={t.name}
                         fill
                         className="object-cover"
-                        sizes="144px"
+                        sizes="176px"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center min-h-[120px]">
-                        <span className="text-3xl opacity-20">🏆</span>
+                      <div className="w-full h-full flex items-center justify-center min-h-[120px] bg-gradient-to-br from-gray-800 to-gray-950">
+                        <span className="text-4xl opacity-40">🏆</span>
                       </div>
                     )}
                   </div>

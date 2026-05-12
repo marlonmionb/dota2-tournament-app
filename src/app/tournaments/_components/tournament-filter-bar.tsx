@@ -23,6 +23,12 @@ const ENTRY_OPTIONS: { value: string; label: string }[] = [
   { value: "paid", label: "Paid" },
 ];
 
+const SORT_OPTIONS: { value: string; label: string }[] = [
+  { value: "startDate", label: "Soonest Start" },
+  { value: "registrationDeadline", label: "Reg. Closing Soon" },
+  { value: "createdAt", label: "Newest" },
+];
+
 type DropdownOption = { value: string; label: string };
 
 function PillSelect({
@@ -70,6 +76,7 @@ export function TournamentFilterBar() {
   const currentEntry = searchParams.get("entry") ?? "";
   const currentMaxRank = searchParams.get("maxRank") ?? "";
   const currentSearch = searchParams.get("search") ?? "";
+  const currentSort = searchParams.get("sort") ?? "startDate";
 
   const [searchInput, setSearchInput] = useState(currentSearch);
 
@@ -175,6 +182,12 @@ export function TournamentFilterBar() {
             ...Object.entries(RANK_TIER_LABELS).map(([tier, label]) => ({ value: tier, label })),
           ]}
           onChange={(v) => updateParam("maxRank", v)}
+        />
+
+        <PillSelect
+          value={currentSort}
+          options={SORT_OPTIONS}
+          onChange={(v) => updateParam("sort", v === "startDate" ? "" : v)}
         />
 
         {hasFilters && (

@@ -11,7 +11,7 @@ export const statusLabels: Record<TournamentStatus, string> = {
 export const statusColors: Record<TournamentStatus, string> = {
   DRAFT: "bg-gray-800 text-gray-300",
   REGISTRATION_OPEN: "bg-green-950 text-green-400",
-  REGISTRATION_CLOSED: "bg-amber-950 text-amber-400",
+  REGISTRATION_CLOSED: "bg-orange-950 text-orange-400",
   IN_PROGRESS: "bg-blue-950 text-blue-400",
   COMPLETED: "bg-slate-800 text-slate-400",
 };
