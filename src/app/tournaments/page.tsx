@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { TournamentStatus } from "@prisma/client";
-import { Trophy, ShieldAlert, ChevronLeft, ChevronRight, CalendarX, MapPin } from "lucide-react";
+import { Trophy, ShieldAlert, ChevronLeft, ChevronRight, CalendarClock, MapPin } from "lucide-react";
 import { currencySymbol } from "@/lib/currencies";
 import { TournamentFilterBar } from "./_components/tournament-filter-bar";
 import { statusLabels, statusColors } from "@/lib/tournament-display";
@@ -164,7 +164,7 @@ export default async function TournamentsPage({
                         const isPast = deadline < new Date();
                         return (
                           <span className={`flex items-center gap-1 ${isPast ? "text-red-400" : ""}`}>
-                            <CalendarX className="w-3.5 h-3.5" />
+                            <CalendarClock className="w-3.5 h-3.5" />
                             {isPast
                               ? `Reg. closed ${formatRelativeDate(deadline)}`
                               : `Reg. closes ${formatRelativeDate(deadline)}`}

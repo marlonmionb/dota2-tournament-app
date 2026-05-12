@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { TournamentStatus } from "@prisma/client";
 import { DOTA2_REGIONS } from "@/lib/regions";
-import { Search, X } from "lucide-react";
+import { Search, X, ChevronDown } from "lucide-react";
 
 const RANK_TIER_LABELS: Record<number, string> = {
   1: "Herald",
@@ -16,6 +16,43 @@ const RANK_TIER_LABELS: Record<number, string> = {
   7: "Divine",
   8: "Immortal",
 };
+
+const ENTRY_OPTIONS: { value: string; label: string }[] = [
+  { value: "", label: "Any Entry" },
+  { value: "free", label: "Free" },
+  { value: "paid", label: "Paid" },
+];
+
+type DropdownOption = { value: string; label: string };
+
+function PillSelect({
+  value,
+  options,
+  onChange,
+}: {
+  value: string;
+  options: DropdownOption[];
+  onChange: (v: string) => void;
+}) {
+  const selected = options.find((o) => o.value === value) ?? options[0];
+  return (
+    <div className="relative inline-flex">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="appearance-none bg-gray-800 text-gray-300 text-xs font-medium rounded-full pl-3 pr-7 py-1.5 border border-gray-700 focus:outline-none focus:border-amber-500 cursor-pointer hover:bg-gray-700 transition-colors"
+        aria-label={selected.label}
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
+    </div>
+  );
+}
 
 const STATUS_OPTIONS: { value: TournamentStatus | ""; label: string }[] = [
   { value: "", label: "All" },
@@ -114,43 +151,31 @@ export function TournamentFilterBar() {
         ))}
       </div>
 
-      {/* Row 2: Dropdowns */}
+      {/* Row 2: Dropdowns styled as pills */}
       <div className="flex flex-wrap items-center gap-2">
-        <select
+        <PillSelect
           value={currentRegion}
-          onChange={(e) => updateParam("region", e.target.value)}
-          className="bg-gray-800 text-gray-300 text-xs rounded-lg px-3 py-1.5 border border-gray-700 focus:outline-none focus:border-amber-500 cursor-pointer"
-        >
-          <option value="">All Regions</option>
-          {DOTA2_REGIONS.map((r) => (
-            <option key={r.code} value={r.code}>
-              {r.label}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "", label: "All Regions" },
+            ...DOTA2_REGIONS.map((r) => ({ value: r.code, label: r.label })),
+          ]}
+          onChange={(v) => updateParam("region", v)}
+        />
 
-        <select
+        <PillSelect
           value={currentEntry}
-          onChange={(e) => updateParam("entry", e.target.value)}
-          className="bg-gray-800 text-gray-300 text-xs rounded-lg px-3 py-1.5 border border-gray-700 focus:outline-none focus:border-amber-500 cursor-pointer"
-        >
-          <option value="">Any Entry</option>
-          <option value="free">Free</option>
-          <option value="paid">Paid</option>
-        </select>
+          options={ENTRY_OPTIONS}
+          onChange={(v) => updateParam("entry", v)}
+        />
 
-        <select
+        <PillSelect
           value={currentMaxRank}
-          onChange={(e) => updateParam("maxRank", e.target.value)}
-          className="bg-gray-800 text-gray-300 text-xs rounded-lg px-3 py-1.5 border border-gray-700 focus:outline-none focus:border-amber-500 cursor-pointer"
-        >
-          <option value="">Any Rank Cap</option>
-          {Object.entries(RANK_TIER_LABELS).map(([tier, label]) => (
-            <option key={tier} value={tier}>
-              {label}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "", label: "Any Rank Cap" },
+            ...Object.entries(RANK_TIER_LABELS).map(([tier, label]) => ({ value: tier, label })),
+          ]}
+          onChange={(v) => updateParam("maxRank", v)}
+        />
 
         {hasFilters && (
           <button
