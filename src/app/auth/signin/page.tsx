@@ -40,7 +40,7 @@ function SignInPageContent() {
       const code = result.error ?? "unknown_error";
       if (code.includes("database_unavailable")) {
         setError(
-          "Cannot reach the database. Make sure Docker is running: docker compose up -d"
+          "Cannot reach the database. Check your DATABASE_URL and Supabase project status."
         );
       } else if (code.toLowerCase().includes("configuration")) {
         setError(

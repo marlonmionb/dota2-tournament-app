@@ -1,17 +1,4 @@
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: dota2_tournament_db
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: dota2
-      POSTGRES_PASSWORD: dota2pass
-      POSTGRES_DB: dota2_tournament
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: dota2_pgadmin
@@ -21,11 +8,8 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "5050:80"
-    depends_on:
-      - db
     volumes:
       - pgadmin_data:/var/lib/pgadmin
 
 volumes:
-  postgres_data:
   pgadmin_data:

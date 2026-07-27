@@ -24,6 +24,8 @@ package-lock.json
 # misc
 .DS_Store
 *.pem
+# Supabase's public CA cert is required at runtime for TLS verification (not a secret)
+!/certs/*.pem
 
 # debug
 npm-debug.log*
