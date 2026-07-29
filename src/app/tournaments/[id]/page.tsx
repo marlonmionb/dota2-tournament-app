@@ -13,6 +13,7 @@ import { TournamentStatusAction } from "./_components/tournament-status-actions"
 import { GenerateBracketAction } from "./_components/generate-bracket-action";
 import { DeleteTournamentAction } from "./_components/delete-tournament-action";
 import { BracketTree } from "./_components/bracket-tree";
+import { ChampionBanner } from "./_components/champion-banner";
 import { TeamCard } from "./_components/team-card";
 import type { MatchWithTeams, BracketRound, TeamWithPlayers } from "@/types";
 import { statusLabels } from "@/lib/tournament-display";
@@ -98,6 +99,7 @@ export default async function TournamentPage({
 
   const rounds = groupMatchesByRound(tournament.matches as MatchWithTeams[]);
   const hasBracket = rounds.length > 0;
+  const champion = rounds[rounds.length - 1]?.matches[0]?.winner ?? null;
 
   return (
     <div className="max-w-4xl mx-auto p-8">
@@ -284,6 +286,8 @@ export default async function TournamentPage({
         tournament.status === TournamentStatus.IN_PROGRESS ||
         tournament.status === TournamentStatus.COMPLETED) && (
         <section>
+          {champion && <ChampionBanner teamName={champion.teamName} logoUrl={champion.logoUrl} />}
+
           <div className="mb-4 flex items-end justify-between gap-4">
             <div>
               <h2 className="text-xl font-semibold">Bracket</h2>
@@ -296,7 +300,11 @@ export default async function TournamentPage({
           </div>
 
           {hasBracket ? (
-            <BracketTree rounds={rounds} getRoundLabel={roundLabel} />
+            <BracketTree
+              rounds={rounds}
+              getRoundLabel={roundLabel}
+              canRecordResults={isOrganizer && tournament.status === TournamentStatus.IN_PROGRESS}
+            />
           ) : (
             <div className="rounded-2xl border border-dashed border-gray-700 bg-gray-900 px-5 py-6 text-sm text-gray-400">
               {isOrganizer

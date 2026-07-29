@@ -1,4 +1,5 @@
 import type { BracketRound, MatchWithTeams } from "@/types";
+import { PickWinnerButton } from "./pick-winner-button";
 
 // Must match Tailwind gap-8 (32px) used between columns
 const COL_GAP = 32;
@@ -8,22 +9,29 @@ const SLOT_BASE = 200;
 interface Props {
   rounds: BracketRound[];
   getRoundLabel: (round: number, totalRounds: number) => string;
+  canRecordResults?: boolean;
 }
 
 function TeamSlot({
   name,
   logoUrl,
   isWinner,
+  isLoser,
+  pickWinner,
 }: {
   name: string;
   logoUrl?: string | null;
   isWinner: boolean;
+  isLoser: boolean;
+  pickWinner?: { matchId: string; teamId: string };
 }) {
   return (
     <div
       className={
         isWinner
-          ? "flex items-center gap-2 rounded-xl bg-red-950/50 px-3 py-3 font-semibold text-red-400"
+          ? "flex items-center gap-2 rounded-xl bg-amber-950/50 px-3 py-3 font-semibold text-amber-400"
+          : isLoser
+          ? "flex items-center gap-2 rounded-xl bg-red-950/50 px-3 py-3 text-red-400/70"
           : "flex items-center gap-2 rounded-xl bg-gray-800 px-3 py-3 text-gray-300"
       }
     >
@@ -35,7 +43,10 @@ function TeamSlot({
           name.charAt(0).toUpperCase()
         )}
       </div>
-      <span className="truncate">{name}</span>
+      <span className="truncate flex-1">{name}</span>
+      {pickWinner && (
+        <PickWinnerButton matchId={pickWinner.matchId} teamId={pickWinner.teamId} teamName={name} />
+      )}
     </div>
   );
 }
@@ -45,13 +56,17 @@ function MatchCard({
   matchIndex,
   slotSize,
   showConnector,
+  canRecordResults,
 }: {
   match: MatchWithTeams;
   matchIndex: number;
   slotSize: number;
   showConnector: boolean;
+  canRecordResults: boolean;
 }) {
   const isTopOfPair = matchIndex % 2 === 0;
+  const canPickWinner =
+    canRecordResults && match.status !== "COMPLETED" && !!match.teamAId && !!match.teamBId;
 
   return (
     // Each match occupies a fixed slot; card is vertically centered within it
@@ -62,11 +77,19 @@ function MatchCard({
             name={match.teamA?.teamName ?? "TBD"}
             logoUrl={match.teamA?.logoUrl}
             isWinner={match.winnerId === match.teamAId}
+            isLoser={!!match.winnerId && !!match.teamAId && match.winnerId !== match.teamAId}
+            pickWinner={
+              canPickWinner && match.teamAId ? { matchId: match.id, teamId: match.teamAId } : undefined
+            }
           />
           <TeamSlot
             name={match.teamB?.teamName ?? "TBD"}
             logoUrl={match.teamB?.logoUrl}
             isWinner={match.winnerId === match.teamBId}
+            isLoser={!!match.winnerId && !!match.teamBId && match.winnerId !== match.teamBId}
+            pickWinner={
+              canPickWinner && match.teamBId ? { matchId: match.id, teamId: match.teamBId } : undefined
+            }
           />
         </div>
         <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
@@ -109,7 +132,7 @@ function MatchCard({
   );
 }
 
-export function BracketTree({ rounds, getRoundLabel }: Props) {
+export function BracketTree({ rounds, getRoundLabel, canRecordResults = false }: Props) {
   const totalRounds = rounds.length;
 
   return (
@@ -133,6 +156,7 @@ export function BracketTree({ rounds, getRoundLabel }: Props) {
                     matchIndex={matchIndex}
                     slotSize={slotSize}
                     showConnector={!isLastRound}
+                    canRecordResults={canRecordResults}
                   />
                 ))}
               </div>
