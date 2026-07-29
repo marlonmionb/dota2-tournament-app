@@ -165,19 +165,25 @@ export default async function TournamentsPage({
                           {regionMap[t.region] ?? t.region}
                         </span>
                       )}
-                      <span>{new Date(t.startDate) <= new Date() ? "Started" : "Starts"} {formatRelativeDate(new Date(t.startDate))}</span>
-                      {(() => {
-                        const deadline = new Date(t.registrationDeadline);
-                        const isPast = deadline < new Date();
-                        return (
-                          <span className={`flex items-center gap-1 ${isPast ? "text-red-400" : ""}`}>
-                            <CalendarClock className="w-3.5 h-3.5" />
-                            {isPast
-                              ? `Reg. closed ${formatRelativeDate(deadline)}`
-                              : `Reg. closes ${formatRelativeDate(deadline)}`}
-                          </span>
-                        );
-                      })()}
+                      {effectiveStatus === TournamentStatus.COMPLETED ? (
+                        <span>Started {new Date(t.startDate).toLocaleDateString()}</span>
+                      ) : (
+                        <>
+                          <span>{new Date(t.startDate) <= new Date() ? "Started" : "Starts"} {formatRelativeDate(new Date(t.startDate))}</span>
+                          {(() => {
+                            const deadline = new Date(t.registrationDeadline);
+                            const isPast = deadline < new Date();
+                            return (
+                              <span className={`flex items-center gap-1 ${isPast ? "text-red-400" : ""}`}>
+                                <CalendarClock className="w-3.5 h-3.5" />
+                                {isPast
+                                  ? `Reg. closed ${formatRelativeDate(deadline)}`
+                                  : `Reg. closes ${formatRelativeDate(deadline)}`}
+                              </span>
+                            );
+                          })()}
+                        </>
+                      )}
                       {t.entryFee != null && Number(t.entryFee) > 0 && (
                         <span className="text-amber-400 font-medium">Entry: {currencySymbol(t.currency)}{Number(t.entryFee).toFixed(2)} / team</span>
                       )}
@@ -200,7 +206,9 @@ export default async function TournamentsPage({
 
                     {/* Teams progress bar */}
                     <div>
-                      {teamCount >= t.maxTeams ? (
+                      {effectiveStatus === TournamentStatus.COMPLETED ? (
+                        <p className="text-xs text-gray-400">{teamCount} team{teamCount === 1 ? "" : "s"} competed</p>
+                      ) : teamCount >= t.maxTeams ? (
                         <p className="text-xs font-medium text-red-400">Full — no spots remaining</p>
                       ) : (
                         <>
