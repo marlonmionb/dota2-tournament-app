@@ -3,8 +3,13 @@
 import { signIn } from "next-auth/react";
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 function SignInPageContent() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+
   const searchParams = useSearchParams();
   const rawCallbackUrl = searchParams.get("callbackUrl") ?? "/";
   // Only allow same-origin relative paths to prevent open redirect attacks.
@@ -12,22 +17,22 @@ function SignInPageContent() {
     rawCallbackUrl.startsWith("/") && !rawCallbackUrl.startsWith("//")
       ? rawCallbackUrl
       : "/";
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  async function handleDevLogin(e: React.FormEvent<HTMLFormElement>) {
+  async function handlePasswordLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError(null);
     setLoading(true);
+    setError(null);
+
     const form = e.currentTarget;
     const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-    const name = (form.elements.namedItem("name") as HTMLInputElement).value;
+    const password = (form.elements.namedItem("password") as HTMLInputElement)
+      .value;
 
     const result = await signIn("credentials", {
-      email,
-      name,
-      callbackUrl,
       redirect: false,
+      email,
+      password,
+      callbackUrl,
     });
 
     if (!result) {
@@ -37,38 +42,18 @@ function SignInPageContent() {
     }
 
     if (result.error || !result.ok) {
-      const code = result.error ?? "unknown_error";
-      if (code.includes("database_unavailable")) {
-        setError(
-          "Cannot reach the database. Check your DATABASE_URL and Supabase project status."
-        );
-      } else if (code.toLowerCase().includes("configuration")) {
-        setError(
-          "Dev login is not enabled. Set ENABLE_DEV_LOGIN=true (or remove ENABLE_DEV_LOGIN=false) and restart the dev server."
-        );
-      } else {
-        setError(`Sign-in failed (${code}). Check the server logs for details.`);
-      }
+      setError("Invalid email or password.");
       setLoading(false);
-    } else if (result.url) {
-      window.location.href = result.url;
-    } else {
-      // NextAuth v5 may not return a url — navigate to callbackUrl directly
-      window.location.href = callbackUrl;
+      return;
     }
+
+    window.location.href = result.url ?? callbackUrl;
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center mb-8">Sign in</h1>
-
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-950/50 border border-red-800 text-red-400 px-4 py-3 text-sm">
-            {error}
-          </div>
-        )}
-
         {/* OAuth providers */}
         <div className="space-y-3 mb-6">
           <button
@@ -95,7 +80,6 @@ function SignInPageContent() {
             </svg>
             Continue with Google
           </button>
-
           <button
             onClick={() => signIn("discord", { callbackUrl })}
             className="w-full flex items-center justify-center gap-2 border border-gray-700 rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors"
@@ -106,43 +90,50 @@ function SignInPageContent() {
             Continue with Discord
           </button>
         </div>
-
-        {/* Dev-only credentials login */}
-        {process.env.NODE_ENV !== "production" && (
-          <>
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-700" />
-              </div>
-              <div className="relative flex justify-center text-xs text-gray-500 bg-gray-950 px-2">
-                dev login (local only)
-              </div>
-            </div>
-
-            <form onSubmit={handleDevLogin} className="space-y-3">
+        <div>
+          <form onSubmit={handlePasswordLogin} className="space-y-3 mb-6">
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium mb-1">
+                Email
+              </label>
               <input
-                name="email"
                 type="email"
+                name="email"
+                id="email"
                 required
-                placeholder="any@email.com"
-                className="w-full border border-gray-700 bg-gray-900 text-gray-100 placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full border border-gray-700 rounded-lg px-4 py-2 text-sm bg-gray-900"
               />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium mb-1">
+                Password
+              </label>
               <input
-                name="name"
-                type="text"
-                placeholder="Your name (optional)"
-                className="w-full border border-gray-700 bg-gray-900 text-gray-100 placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                type="password"
+                name="password"
+                id="password"
+                required
+                className="w-full border border-gray-700 rounded-lg px-4 py-2 text-sm bg-gray-900"
               />
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-lg bg-gray-800 px-4 py-2 text-white text-sm font-semibold hover:bg-gray-700 disabled:opacity-50 transition-colors"
-              >
-                {loading ? "Signing in..." : "Sign in as dev user"}
-              </button>
-            </form>
-          </>
-        )}
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 border border-gray-700 rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors"
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
+        </div>
+        <div>
+          <Link
+            href="/auth/signup"
+            className="w-full flex items-center justify-center gap-2 border border-gray-700 rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors text-center"
+          >
+            Sign Up
+          </Link>
+        </div>
       </div>
     </div>
   );

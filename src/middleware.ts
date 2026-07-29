@@ -4,10 +4,14 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
 
-const PROTECTED_ROUTES = [
+const AUTHENTICATED_ROUTES = [
   /^\/tournaments\/new(\/|$)/,
   /^\/tournaments\/[^/]+\/edit(\/|$)/,
   /^\/tournaments\/[^/]+\/teams\/[^/]+\/edit(\/|$)/,
+];
+
+const ADMIN_ROUTES = [
+  /^\/admin(\/|$)/,
 ];
 
 const ratelimit = new Ratelimit({
@@ -20,8 +24,7 @@ const { auth } = NextAuth(authConfig);
 export default auth(async (req) => {
   const { pathname } = req.nextUrl;
 
-  // Auth guard — redirect unauthenticated users before RSC runs
-  if (PROTECTED_ROUTES.some((r) => r.test(pathname))) {
+  if (AUTHENTICATED_ROUTES.some((r) => r.test(pathname))) {
     if (!req.auth?.user) {
       const signInUrl = req.nextUrl.clone();
       signInUrl.pathname = "/auth/signin";
@@ -30,17 +33,18 @@ export default auth(async (req) => {
     }
   }
 
-  // Rate limit API routes — exclude auth callbacks to avoid blocking OAuth flows
-  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/auth/")) {
-    // Prefer x-real-ip (set by Vercel's edge; clients cannot spoof it).
-    // Fall back to the leftmost entry in X-Forwarded-For (originating client).
-    // Never use the full header string as a key — it's comma-separated and client-controllable.
-    const realIp = req.headers.get("x-real-ip");
-    const forwarded = req.headers.get("x-forwarded-for");
-    const ip = realIp ?? (forwarded ? forwarded.split(",")[0].trim() : "unknown");
-    const { success } = await ratelimit.limit(ip);
-    if (!success) {
-      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  if (ADMIN_ROUTES.some((r) => r.test(pathname))) {
+    const role = req.auth?.user?.role;
+
+    if (!req.auth?.user) {
+      const signInUrl = req.nextUrl.clone();
+      signInUrl.pathname = "/auth/signin";
+      signInUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(signInUrl);
+    }
+
+    if (role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/", req.url));
     }
   }
 
@@ -48,5 +52,11 @@ export default auth(async (req) => {
 });
 
 export const config = {
-  matcher: ["/api/:path*", "/tournaments/new", "/tournaments/:id/edit", "/tournaments/:id/teams/:teamId/edit"],
+  matcher: [
+    "/api/:path*",
+    "/tournaments/new",
+    "/tournaments/:id/edit",
+    "/tournaments/:id/teams/:teamId/edit",
+    "/admin/:path*",
+  ],
 };

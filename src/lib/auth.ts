@@ -1,60 +1,16 @@
 import NextAuth from "next-auth";
+import argon2 from "argon2";
 import Google from "next-auth/providers/google";
-import Discord from "next-auth/providers/discord";
 import Credentials from "next-auth/providers/credentials";
+import Discord from "next-auth/providers/discord";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import { authConfig } from "@/lib/auth.config";
-
-if (process.env.NODE_ENV === "production" && process.env.ENABLE_DEV_LOGIN === "true") {
-  throw new Error("ENABLE_DEV_LOGIN must not be set in production");
-}
-
-const isDevLoginEnabled =
-  process.env.NODE_ENV === "development" && process.env.ENABLE_DEV_LOGIN !== "false";
-
-/**
- * Dev-only credentials provider — lets you log in with any email locally
- * without setting up OAuth. Never enabled in production.
- */
-const devCredentialsProvider =
-  isDevLoginEnabled
-    ? Credentials({
-        name: "Dev Login",
-        credentials: {
-          email: { label: "Email", type: "email", placeholder: "you@example.com" },
-          name: { label: "Display name", type: "text", placeholder: "Your name" },
-        },
-        async authorize(credentials) {
-          if (!credentials?.email || typeof credentials.email !== "string") return null;
-          try {
-            // Find or create user so the ID is stable across logins
-            const user = await prisma.user.upsert({
-              where: { email: credentials.email },
-              update: {},
-              create: {
-                email: credentials.email,
-                name:
-                  typeof credentials.name === "string" && credentials.name.trim()
-                    ? credentials.name.trim()
-                    : "Dev User",
-              },
-            });
-            return { id: user.id, email: user.email, name: user.name };
-          } catch (err) {
-            console.error("[Dev Auth] Database error during authorize:", err);
-            // Surface a recognizable code so the UI can show a helpful message
-            throw new Error("database_unavailable");
-          }
-        },
-      })
-    : null;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
   providers: [
-    ...(devCredentialsProvider ? [devCredentialsProvider] : []),
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -63,6 +19,44 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientId: process.env.DISCORD_CLIENT_ID!,
       clientSecret: process.env.DISCORD_CLIENT_SECRET!,
     }),
+    Credentials({
+      name: "Email and Password",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const email = credentials?.email;
+        const password = credentials?.password;
+
+        if (typeof email !== "string" || typeof password !== "string") {
+          return null;
+        }
+
+        if (!email || !password) {
+          return null;
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { email },
+        });
+
+        if (!user || !user.passwordHash) {
+          return null;
+        }
+        const isValid = await argon2.verify(user.passwordHash, password);
+        if (!isValid) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        };
+      },
+    })
   ],
 });
 
