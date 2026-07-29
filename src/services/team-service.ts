@@ -1,4 +1,4 @@
-import { Prisma, TournamentStatus } from "@prisma/client";
+import { Prisma, TournamentStatus, UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { findTournamentById } from "@/repositories/tournament-repository";
 import {
@@ -46,7 +46,8 @@ async function resolvePlayerWithRank(
 export async function registerTeam(
   tournamentId: string,
   input: RegisterTeamInput,
-  registeredById: string | null = null
+  registeredById: string | null = null,
+  role?: UserRole
 ) {
   const data = registerTeamSchema.parse(input);
 
@@ -77,7 +78,11 @@ export async function registerTeam(
     );
     if (duplicate) throw new Error("A team with this name is already registered");
 
-    if (registeredById && tournament.teams.some((t) => t.registeredById === registeredById))
+    if (
+      role !== UserRole.ADMIN &&
+      registeredById &&
+      tournament.teams.some((t) => t.registeredById === registeredById)
+    )
       throw new Error("You have already registered a team for this tournament");
 
     const existingSteamIds = tournament.teams.flatMap((t) => t.players.map((p) => p.steamId));

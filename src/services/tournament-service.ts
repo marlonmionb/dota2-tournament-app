@@ -1,4 +1,4 @@
-import { TournamentStatus } from "@prisma/client";
+import { TournamentStatus, UserRole } from "@prisma/client";
 import { unstable_cache, revalidateTag } from "next/cache";
 import {
   countTournamentsByOrganizer,
@@ -53,14 +53,17 @@ export async function getTournamentByIdPublic(id: string) {
 
 export async function createTournament(
   organizerId: string,
-  input: CreateTournamentInput
+  input: CreateTournamentInput,
+  role?: UserRole
 ) {
   const data = createTournamentSchema.parse(input);
-  const currentCount = await countTournamentsByOrganizer(organizerId);
-  if (currentCount >= MAX_TOURNAMENTS_PER_ORGANIZER) {
-    throw new Error(
-      `Tournament limit reached: each user can create up to ${MAX_TOURNAMENTS_PER_ORGANIZER} tournaments`
-    );
+  if (role !== UserRole.ADMIN) {
+    const currentCount = await countTournamentsByOrganizer(organizerId);
+    if (currentCount >= MAX_TOURNAMENTS_PER_ORGANIZER) {
+      throw new Error(
+        `Tournament limit reached: each user can create up to ${MAX_TOURNAMENTS_PER_ORGANIZER} tournaments`
+      );
+    }
   }
   return dbCreate(organizerId, data);
 }

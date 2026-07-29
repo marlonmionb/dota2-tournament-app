@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const tournament = await createTournament(session.user.id, body);
+    const tournament = await createTournament(session.user.id, body, session.user.role);
     return NextResponse.json(tournament, { status: 201 });
   } catch (error) {
     return handleApiError(error);

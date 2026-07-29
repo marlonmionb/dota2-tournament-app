@@ -25,7 +25,7 @@ export async function POST(
 
     const { id } = await params;
     const body = await request.json();
-    const team = await registerTeam(id, body, session?.user?.id ?? null);
+    const team = await registerTeam(id, body, session?.user?.id ?? null, session?.user?.role);
     return NextResponse.json(team, { status: 201 });
   } catch (error) {
     return handleApiError(error);
