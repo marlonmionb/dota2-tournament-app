@@ -5,12 +5,31 @@ import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
+// Maps NextAuth's error query param codes to user-facing messages.
+function getOAuthErrorMessage(errorCode: string | null): string | null {
+  switch (errorCode) {
+    case "OAuthAccountNotLinked":
+      return "An account already exists with this email. Please sign in using the method you used previously.";
+    case "OAuthSignin":
+    case "OAuthCallback":
+    case "OAuthCreateAccount":
+      return "Something went wrong signing in with that provider. Please try again.";
+    case "AccessDenied":
+      return "Access denied.";
+    case null:
+      return null;
+    default:
+      return "Unable to sign in. Please try again.";
+  }
+}
+
 function SignInPageContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
 
   const searchParams = useSearchParams();
+  const oauthError = getOAuthErrorMessage(searchParams.get("error"));
   const rawCallbackUrl = searchParams.get("callbackUrl") ?? "/";
   // Only allow same-origin relative paths to prevent open redirect attacks.
   const callbackUrl =
@@ -54,6 +73,9 @@ function SignInPageContent() {
     <div className="min-h-screen flex items-center justify-center p-8">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center mb-8">Sign in</h1>
+        {oauthError && (
+          <p className="text-red-500 text-sm mb-4 text-center">{oauthError}</p>
+        )}
         {/* OAuth providers */}
         <div className="space-y-3 mb-6">
           <button
