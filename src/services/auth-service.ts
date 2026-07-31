@@ -9,10 +9,12 @@ export async function createUser(input: { email: string; password: string }) {
 
   const hashedPassword = await hashPassword(input.password);
 
-  return createUserRecord({
+  const user = await createUserRecord({
     email: input.email,
     passwordHash: hashedPassword,
   });
+
+  return { id: user.id, email: user.email };
 }
 
 function hashPassword(password: string): Promise<string> {
